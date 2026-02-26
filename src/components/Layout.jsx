@@ -3,16 +3,23 @@ import { Outlet, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 export default function Layout() {
-  const { lock } = useAuth();
+  const { lock, name } = useAuth();
   const navigate = useNavigate();
 
   return (
     <div className="min-h-screen bg-white text-black w-[90vw] max-w-sm mx-auto">
       {/* Header */}
       <header className="border-b-2 border-black px-1 py-4 flex items-center justify-between sticky top-0 bg-white z-50">
-        <NavLink to="/" className="text-sm font-bold tracking-[0.35em]">
-          IRON LOG
-        </NavLink>
+        <div className="flex items-center gap-3">
+          <NavLink to="/" className="text-sm font-bold tracking-[0.35em]">
+            FYT FYN FYN
+          </NavLink>
+          {name && (
+            <span className="text-[9px] tracking-widest text-gray-400 border border-gray-200 px-1.5 py-0.5">
+              {name}
+            </span>
+          )}
+        </div>
         <div className="flex items-center gap-5">
           <NavLink
             to="/progress"
@@ -32,7 +39,7 @@ export default function Layout() {
       </header>
 
       {/* Main */}
-      <main className="px-1 py-6 pb-28">
+      <main className="px-1 py-6 pb-28 page-transition">
         <Outlet />
       </main>
 

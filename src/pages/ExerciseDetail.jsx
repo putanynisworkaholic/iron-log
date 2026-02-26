@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useExercises, useExerciseHistory } from "../hooks/useExercises";
-import { formatDate, randomFrom } from "../lib/utils";
+import { formatDate, randomFrom, getOverloadSuggestion } from "../lib/utils";
 import { FUNNY_MESSAGES } from "../lib/seedData";
 import LineChart from "../components/LineChart";
 import Collapse from "../components/Collapse";
+import { TrophyIcon } from "../components/Icons";
 
 function SetRow({ index, set, onChange, onRemove }) {
   return (
@@ -57,22 +58,29 @@ export default function ExerciseDetail() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [showForm, setShowForm] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Last session data
   const lastSession = useMemo(() => {
     if (!history.length) return null;
-    return history[0]; // Already sorted by date desc
+    return history[0];
   }, [history]);
 
-  const suggestion = useMemo(() => {
+  // Last session's best set (for "USE LAST SESSION" fallback)
+  const lastBest = useMemo(() => {
     if (!lastSession) return null;
     const best = lastSession.sets.reduce((acc, s) =>
       s.weight > acc.weight ? s : acc, lastSession.sets[0]);
     return { weight: best.weight, reps: best.reps };
   }, [lastSession]);
 
-  // Chart data: max weight per session over time
-  const chartData = useMemo(() => {
+  // Progressive overload suggestion
+  const overload = useMemo(() => {
+    if (!exercise || !lastSession) return null;
+    return getOverloadSuggestion(exercise.category, lastSession);
+  }, [exercise, lastSession]);
+
+  // Volume chart data
+  const volumeChartData = useMemo(() => {
     return [...history]
       .reverse()
       .slice(-12)
@@ -82,29 +90,50 @@ export default function ExerciseDetail() {
       }));
   }, [history]);
 
+  // Max weight chart data
+  const maxWeightChartData = useMemo(() => {
+    return [...history]
+      .reverse()
+      .slice(-12)
+      .map(log => ({
+        label: formatDate(log.date),
+        value: Math.max(...log.sets.map(s => s.weight)),
+      }));
+  }, [history]);
+
   const handleAddSet = () => setSets(s => [...s, { weight: sets[sets.length - 1]?.weight || "", reps: "" }]);
   const handleRemoveSet = (i) => setSets(s => s.length > 1 ? s.filter((_, idx) => idx !== i) : s);
   const handleSetChange = (i, field, value) => {
     setSets(s => s.map((set, idx) => idx === i ? { ...set, [field]: value } : set));
   };
 
-  const handleUseSuggestion = () => {
+  const handleUseOverload = () => {
+    if (!overload || !lastSession) return;
+    setTargetWeight(String(overload.weight));
+    setTargetReps(String(overload.reps));
+    setSets(lastSession.sets.map(s => ({ weight: String(overload.weight), reps: String(overload.reps) })));
+    setShowForm(true);
+  };
+
+  const handleUseLastSession = () => {
     if (!lastSession) return;
-    setTargetWeight(String(suggestion.weight));
-    setTargetReps(String(suggestion.reps));
+    setTargetWeight(String(lastBest.weight));
+    setTargetReps(String(lastBest.reps));
     setSets(lastSession.sets.map(s => ({ weight: String(s.weight), reps: String(s.reps) })));
     setShowForm(true);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const { error } = logSets(sets, targetWeight, targetReps);
+    const { error } = await logSets(sets, targetWeight, targetReps);
     setSaving(false);
     if (!error) {
       setMessage(randomFrom(FUNNY_MESSAGES));
       setSets([{ weight: "", reps: "" }]);
       setShowForm(false);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 1500);
     }
   };
 
@@ -134,17 +163,26 @@ export default function ExerciseDetail() {
 
       {/* Success message */}
       {message && (
-        <div className="mb-6 p-4 border-2 border-black fade-in">
+        <div className={`mb-6 p-4 border-2 border-black fade-in ${saveSuccess ? "pulse-glow" : ""}`}>
           <p className="text-xs tracking-wide leading-relaxed font-mono">{message}</p>
         </div>
       )}
 
-      {/* Chart */}
-      {chartData.length >= 2 && (
-        <div className="mb-6">
+      {/* Charts */}
+      {volumeChartData.length >= 2 && (
+        <div className="mb-4">
           <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-2">VOLUME TREND</p>
           <div className="border border-gray-100 p-2">
-            <LineChart data={chartData} />
+            <LineChart data={volumeChartData} />
+          </div>
+        </div>
+      )}
+
+      {maxWeightChartData.length >= 2 && (
+        <div className="mb-6">
+          <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-2">MAX WEIGHT TREND</p>
+          <div className="border border-gray-100 p-2">
+            <LineChart data={maxWeightChartData} />
           </div>
         </div>
       )}
@@ -153,13 +191,26 @@ export default function ExerciseDetail() {
       <div className="mb-6 border border-black p-4">
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-3">TRY TODAY</p>
 
-        {suggestion && (
+        {overload && (
           <button
-            onClick={handleUseSuggestion}
+            onClick={handleUseOverload}
+            className="w-full flex items-center justify-between py-3 border-b border-gray-100 mb-2 active:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <TrophyIcon size={12} className="text-black" />
+              <span className="text-[10px] tracking-widest text-black font-bold">PROGRESSIVE OVERLOAD</span>
+            </div>
+            <span className="text-sm font-bold">{overload.weight}kg × {overload.reps}</span>
+          </button>
+        )}
+
+        {lastBest && (
+          <button
+            onClick={handleUseLastSession}
             className="w-full flex items-center justify-between py-3 border-b border-gray-100 mb-3 active:bg-gray-50 transition-colors"
           >
             <span className="text-xs text-gray-500 tracking-wide">LAST SESSION</span>
-            <span className="text-sm font-bold">{suggestion.weight}kg × {suggestion.reps}</span>
+            <span className="text-sm font-bold">{lastBest.weight}kg × {lastBest.reps}</span>
           </button>
         )}
 
@@ -172,7 +223,7 @@ export default function ExerciseDetail() {
               step="0.5"
               value={targetWeight}
               onChange={e => setTargetWeight(e.target.value)}
-              placeholder={suggestion?.weight || "0"}
+              placeholder={overload?.weight || lastBest?.weight || "0"}
               className="w-full border-b border-black py-2 text-base focus:outline-none bg-transparent"
             />
           </div>
@@ -183,7 +234,7 @@ export default function ExerciseDetail() {
               inputMode="numeric"
               value={targetReps}
               onChange={e => setTargetReps(e.target.value)}
-              placeholder={suggestion?.reps || "0"}
+              placeholder={overload?.reps || lastBest?.reps || "0"}
               className="w-full border-b border-black py-2 text-base focus:outline-none bg-transparent"
             />
           </div>
@@ -223,7 +274,7 @@ export default function ExerciseDetail() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full py-3.5 bg-black text-white text-xs tracking-[0.3em] disabled:opacity-50"
+            className={`w-full py-3.5 bg-black text-white text-xs tracking-[0.3em] disabled:opacity-50 ${saveSuccess ? "pulse-glow" : ""}`}
           >
             {saving ? "SAVING..." : "SAVE SESSION"}
           </button>
@@ -236,12 +287,12 @@ export default function ExerciseDetail() {
         {history.length === 0 ? (
           <p className="text-[10px] text-gray-300 tracking-widest text-center py-6">NO HISTORY YET</p>
         ) : (
-          history.slice(0, 10).map(log => (
-            <div key={log.id} className="mb-4 border-b border-gray-100 pb-3">
+          history.slice(0, 10).map((log, i) => (
+            <div key={log.id} className="mb-4 border-b border-gray-100 pb-3 stagger-item" style={{ animationDelay: `${i * 50}ms` }}>
               <p className="text-[10px] text-gray-400 tracking-widest mb-2">{formatDate(log.date)}</p>
               <div className="flex flex-wrap gap-2">
-                {log.sets.map((s, i) => (
-                  <div key={i} className="border border-gray-200 px-2.5 py-1.5">
+                {log.sets.map((s, j) => (
+                  <div key={j} className="border border-gray-200 px-2.5 py-1.5">
                     <span className="text-sm font-bold">{s.weight}</span>
                     <span className="text-[10px] text-gray-400"> kg × </span>
                     <span className="text-sm font-bold">{s.reps}</span>

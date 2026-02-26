@@ -37,3 +37,28 @@ export function calcPercentChange(current, previous) {
 export function randomFrom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
+
+/**
+ * Progressive overload suggestion based on category and last session best set.
+ * Push/Pull: +2.5kg same reps. Leg: +5kg same reps.
+ * If reps < 6 (low range), keep weight but suggest +1 rep.
+ */
+export function getOverloadSuggestion(category, lastSession) {
+  if (!lastSession || !lastSession.sets || lastSession.sets.length === 0) return null;
+
+  const best = lastSession.sets.reduce((acc, s) =>
+    s.weight > acc.weight ? s : acc, lastSession.sets[0]);
+
+  const minReps = 6;
+  const increment = category === "Leg" ? 5 : 2.5;
+
+  if (best.reps < minReps) {
+    return { weight: best.weight, reps: best.reps + 1, type: "reps" };
+  }
+
+  return {
+    weight: Math.round((best.weight + increment) * 10) / 10,
+    reps: best.reps,
+    type: "weight",
+  };
+}

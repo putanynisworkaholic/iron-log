@@ -2,6 +2,13 @@ import React, { useMemo } from "react";
 import { useProgressData, useBodyWeight, useExercises } from "../hooks/useExercises";
 import { formatDate, formatFullDate, calcPercentChange } from "../lib/utils";
 import LineChart from "../components/LineChart";
+import { DumbbellIcon, HeartPulseIcon, ScaleIcon, FlameIcon, TrophyIcon } from "../components/Icons";
+
+function CountUp({ value, suffix = "" }) {
+  return (
+    <span className="count-up">{value}{suffix}</span>
+  );
+}
 
 function StrengthCategoryCard({ category, logs }) {
   const totalVolume = logs.reduce((acc, l) =>
@@ -19,7 +26,6 @@ function StrengthCategoryCard({ category, logs }) {
       .map(([date, value]) => ({ label: formatDate(date), value }));
   }, [logs]);
 
-  // Week-over-week
   const now = new Date();
   const weekAgo = new Date(now); weekAgo.setDate(weekAgo.getDate() - 7);
   const twoWeeksAgo = new Date(now); twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
@@ -34,7 +40,6 @@ function StrengthCategoryCard({ category, logs }) {
     .reduce((acc, l) => acc + l.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0);
   const change = calcPercentChange(thisWeekVol, lastWeekVol);
 
-  // Best lift per exercise
   const bestLifts = {};
   logs.forEach(l => {
     const name = l.exercise_name;
@@ -47,7 +52,7 @@ function StrengthCategoryCard({ category, logs }) {
   });
 
   return (
-    <div className="mb-6 border border-gray-200 p-4">
+    <div className="mb-6 border border-gray-200 p-4 stagger-item">
       <div className="flex items-baseline justify-between mb-4">
         <h3 className="text-xs font-bold tracking-[0.3em] uppercase">{category}</h3>
         {change !== null && (
@@ -61,7 +66,7 @@ function StrengthCategoryCard({ category, logs }) {
       <div className="mb-4">
         <p className="text-[10px] tracking-widest text-gray-400 mb-1">TOTAL VOLUME</p>
         <p className="text-2xl font-bold">
-          {totalVolume.toLocaleString()}
+          <CountUp value={totalVolume.toLocaleString()} />
           <span className="text-xs font-normal text-gray-400 ml-1">kg</span>
         </p>
       </div>
@@ -75,7 +80,10 @@ function StrengthCategoryCard({ category, logs }) {
 
       {Object.keys(bestLifts).length > 0 && (
         <div className="border-t border-gray-100 pt-3">
-          <p className="text-[10px] tracking-widest text-gray-400 mb-2">BEST LIFTS</p>
+          <div className="flex items-center gap-1.5 mb-2">
+            <TrophyIcon size={10} className="text-gray-400" />
+            <p className="text-[10px] tracking-widest text-gray-400">BEST LIFTS</p>
+          </div>
           <div className="space-y-1.5">
             {Object.entries(bestLifts)
               .sort(([, a], [, b]) => b.weight - a.weight)
@@ -99,7 +107,6 @@ export default function Progress() {
 
   const today = formatFullDate();
 
-  // Split workout logs by category
   const byCategory = useMemo(() => {
     const map = {};
     workoutLogs.forEach(l => {
@@ -111,7 +118,6 @@ export default function Progress() {
     return map;
   }, [workoutLogs]);
 
-  // Overall strength stats
   const totalSessions = useMemo(() => {
     const dates = new Set(workoutLogs.map(l => l.date));
     return dates.size;
@@ -122,7 +128,6 @@ export default function Progress() {
       acc + l.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0);
   }, [workoutLogs]);
 
-  // Cardio stats
   const totalCardioSessions = cardioLogs.length;
   const totalMinutes = cardioLogs.reduce((acc, l) => acc + l.duration_minutes, 0);
   const totalCalories = cardioLogs.reduce((acc, l) => acc + (l.calories || 0), 0);
@@ -134,7 +139,6 @@ export default function Progress() {
       .map(l => ({ label: formatDate(l.date), value: l.duration_minutes }));
   }, [cardioLogs]);
 
-  // Body weight chart
   const bwChartData = useMemo(() => {
     return bodyWeightLogs.slice(-20).map(l => ({
       label: formatDate(l.date),
@@ -142,8 +146,20 @@ export default function Progress() {
     }));
   }, [bodyWeightLogs]);
 
+  const bfChartData = useMemo(() => {
+    return bodyWeightLogs
+      .filter(l => l.body_fat_percent != null)
+      .slice(-20)
+      .map(l => ({
+        label: formatDate(l.date),
+        value: parseFloat(l.body_fat_percent),
+      }));
+  }, [bodyWeightLogs]);
+
   const latestWeight = bodyWeightLogs.length > 0
     ? bodyWeightLogs[bodyWeightLogs.length - 1].weight_kg : null;
+  const latestFat = bodyWeightLogs.length > 0
+    ? bodyWeightLogs[bodyWeightLogs.length - 1].body_fat_percent : null;
 
   if (loading) {
     return (
@@ -162,27 +178,52 @@ export default function Progress() {
 
       {/* Body Weight */}
       {bodyWeightLogs.length > 0 && (
-        <div className="mb-8 border border-black p-4">
-          <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-2">BODY WEIGHT</p>
-          <p className="text-3xl font-bold mb-3">
-            {latestWeight}<span className="text-xs font-normal text-gray-400 ml-1">kg</span>
-          </p>
-          {bwChartData.length >= 2 && <LineChart data={bwChartData} height={60} />}
+        <div className="mb-8 border border-black p-4 stagger-item">
+          <div className="flex items-center gap-2 mb-2">
+            <ScaleIcon size={12} className="text-gray-400" />
+            <p className="text-[10px] tracking-[0.3em] text-gray-400">BODY WEIGHT</p>
+          </div>
+          <div className="flex items-baseline gap-4 mb-3">
+            <p className="text-3xl font-bold">
+              <CountUp value={latestWeight} suffix="" />
+              <span className="text-xs font-normal text-gray-400 ml-1">kg</span>
+            </p>
+            {latestFat != null && (
+              <p className="text-lg font-bold text-gray-500">
+                {latestFat}<span className="text-xs font-normal text-gray-400 ml-1">% bf</span>
+              </p>
+            )}
+          </div>
+          {bwChartData.length >= 2 && (
+            <div className="mb-2">
+              <p className="text-[10px] tracking-widest text-gray-400 mb-1">WEIGHT</p>
+              <LineChart data={bwChartData} height={60} />
+            </div>
+          )}
+          {bfChartData.length >= 2 && (
+            <div>
+              <p className="text-[10px] tracking-widest text-gray-400 mb-1 mt-3">BODY FAT %</p>
+              <LineChart data={bfChartData} height={60} />
+            </div>
+          )}
         </div>
       )}
 
       {/* Strength */}
       <div className="mb-2">
-        <p className="text-xs font-bold tracking-[0.3em] mb-4 border-b border-black pb-2">STRENGTH</p>
+        <div className="flex items-center gap-2 mb-4 border-b border-black pb-2">
+          <DumbbellIcon size={12} className="text-black" />
+          <p className="text-xs font-bold tracking-[0.3em]">STRENGTH</p>
+        </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="border border-black p-4">
+          <div className="border border-black p-4 stagger-item" style={{ animationDelay: "50ms" }}>
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">SESSIONS</p>
-            <p className="text-3xl font-bold">{totalSessions}</p>
+            <p className="text-3xl font-bold"><CountUp value={totalSessions} /></p>
           </div>
-          <div className="border border-black p-4">
+          <div className="border border-black p-4 stagger-item" style={{ animationDelay: "100ms" }}>
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">TOTAL VOLUME</p>
-            <p className="text-3xl font-bold">{(totalVolume / 1000).toFixed(1)}</p>
+            <p className="text-3xl font-bold"><CountUp value={(totalVolume / 1000).toFixed(1)} /></p>
             <p className="text-[10px] text-gray-400">TONNES</p>
           </div>
         </div>
@@ -202,20 +243,26 @@ export default function Progress() {
 
       {/* Cardio */}
       <div className="mb-6">
-        <p className="text-xs font-bold tracking-[0.3em] mb-4 border-b border-black pb-2">CARDIO</p>
+        <div className="flex items-center gap-2 mb-4 border-b border-black pb-2">
+          <HeartPulseIcon size={12} className="text-black" />
+          <p className="text-xs font-bold tracking-[0.3em]">CARDIO</p>
+        </div>
 
         <div className="grid grid-cols-3 gap-2 mb-6">
-          <div className="border border-black p-3">
+          <div className="border border-black p-3 stagger-item">
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">SESSIONS</p>
-            <p className="text-2xl font-bold">{totalCardioSessions}</p>
+            <p className="text-2xl font-bold"><CountUp value={totalCardioSessions} /></p>
           </div>
-          <div className="border border-black p-3">
+          <div className="border border-black p-3 stagger-item" style={{ animationDelay: "50ms" }}>
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">TOTAL MIN</p>
-            <p className="text-2xl font-bold">{totalMinutes}</p>
+            <p className="text-2xl font-bold"><CountUp value={totalMinutes} /></p>
           </div>
-          <div className="border border-black p-3">
-            <p className="text-[10px] tracking-widest text-gray-400 mb-1">KCAL</p>
-            <p className="text-2xl font-bold">{totalCalories}</p>
+          <div className="border border-black p-3 stagger-item" style={{ animationDelay: "100ms" }}>
+            <div className="flex items-center gap-1 mb-1">
+              <FlameIcon size={8} className="text-gray-400" />
+              <p className="text-[10px] tracking-widest text-gray-400">KCAL</p>
+            </div>
+            <p className="text-2xl font-bold"><CountUp value={totalCalories} /></p>
           </div>
         </div>
 

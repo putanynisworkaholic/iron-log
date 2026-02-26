@@ -1,10 +1,35 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useExercises, useWeekSets } from "../hooks/useExercises";
-import { getWeekNumber } from "../lib/utils";
-import { CATEGORIES } from "../lib/seedData";
+import { getWeekNumber, randomFrom } from "../lib/utils";
+import { CATEGORIES, MOTIVATIONAL_PHRASES } from "../lib/seedData";
 import CategorySection from "../components/CategorySection";
 import CardioSection from "../components/CardioSection";
 import BodyWeightSection from "../components/BodyWeightSection";
+
+function RotatingPhrase() {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length));
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex(i => (i + 1) % MOTIVATIONAL_PHRASES.length);
+        setVisible(true);
+      }, 300);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <p
+      className="text-[10px] tracking-[0.3em] text-gray-400 mt-2 transition-opacity duration-300"
+      style={{ opacity: visible ? 1 : 0 }}
+    >
+      {MOTIVATIONAL_PHRASES[index]}
+    </p>
+  );
+}
 
 export default function Home() {
   const { exercises, loading } = useExercises();
@@ -35,23 +60,27 @@ export default function Home() {
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-1">{today}</p>
         <h2 className="text-xl font-bold tracking-wide leading-tight">TODAY'S SESSION</h2>
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">WEEK {weekNum} OF 52</p>
+        <RotatingPhrase />
       </div>
 
       {/* Body Weight */}
       <BodyWeightSection />
 
-      {/* Categories — all collapsed by default */}
-      {CATEGORIES.filter(c => c !== "Cardio").map(cat => (
-        <CategorySection
-          key={cat}
-          title={cat}
-          exercises={byCategory[cat] || []}
-          doneIds={doneIds}
-        />
+      {/* Categories */}
+      {CATEGORIES.filter(c => c !== "Cardio").map((cat, i) => (
+        <div key={cat} className="stagger-item" style={{ animationDelay: `${i * 50}ms` }}>
+          <CategorySection
+            title={cat}
+            exercises={byCategory[cat] || []}
+            doneIds={doneIds}
+          />
+        </div>
       ))}
 
       {/* Cardio */}
-      <CardioSection />
+      <div className="stagger-item" style={{ animationDelay: "150ms" }}>
+        <CardioSection />
+      </div>
     </div>
   );
 }

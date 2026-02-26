@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useCardio } from "../hooks/useExercises";
 import { formatDate } from "../lib/utils";
 import Collapse from "./Collapse";
+import LineChart from "./LineChart";
+import { HeartPulseIcon } from "./Icons";
 
 export default function CardioSection() {
   const [open, setOpen] = useState(false);
@@ -9,6 +11,13 @@ export default function CardioSection() {
   const [form, setForm] = useState({ duration_minutes: "", calories: "" });
   const [done, setDone] = useState(false);
   const { sessions, logCardio } = useCardio();
+
+  const chartData = useMemo(() => {
+    return [...sessions]
+      .reverse()
+      .slice(-7)
+      .map(s => ({ label: formatDate(s.date), value: s.duration_minutes }));
+  }, [sessions]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,7 +36,10 @@ export default function CardioSection() {
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between py-4 border-b border-black active:bg-gray-50 transition-colors"
       >
-        <span className="text-xs font-bold tracking-[0.3em] uppercase">CARDIO</span>
+        <div className="flex items-center gap-3">
+          <HeartPulseIcon size={14} className="text-gray-500" />
+          <span className="text-xs font-bold tracking-[0.3em] uppercase">CARDIO</span>
+        </div>
         <span className="text-xs text-gray-400">{open ? "−" : "+"}</span>
       </button>
 
@@ -70,12 +82,19 @@ export default function CardioSection() {
               <button
                 type="submit"
                 disabled={done || !form.duration_minutes}
-                className="w-full py-3 bg-black text-white text-xs tracking-widest disabled:opacity-50"
+                className={`w-full py-3 bg-black text-white text-xs tracking-widest disabled:opacity-50 ${done ? "pulse-glow" : ""}`}
               >
                 {done ? "LOGGED" : "SAVE"}
               </button>
             </form>
           </Collapse>
+
+          {chartData.length >= 2 && (
+            <div className="border border-gray-100 p-2 mb-3">
+              <p className="text-[10px] tracking-widest text-gray-400 mb-1">DURATION TREND</p>
+              <LineChart data={chartData} height={60} />
+            </div>
+          )}
 
           {sessions.slice(0, 5).map(s => (
             <div key={s.id} className="flex justify-between items-center py-2.5 border-b border-gray-100 text-sm">

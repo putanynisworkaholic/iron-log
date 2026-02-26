@@ -2,8 +2,9 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
 import { SEED_EXERCISES } from "../lib/seedData";
 import { getStartOfWeek } from "../lib/utils";
+import { useAuth } from "./useAuth";
 
-// ── Exercises ────────────────────────────────────────────────
+// ── Exercises (shared, no user_id) ──────────────────────────
 export function useExercises() {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,23 +36,23 @@ export function useExercises() {
 }
 
 // ── Exercise History ─────────────────────────────────────────
-// Returns logs grouped per session date: { id, date, sets: [{weight, reps}] }
 export function useExerciseHistory(exerciseId) {
+  const { userId } = useAuth();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchHistory = useCallback(async () => {
-    if (!exerciseId) return;
+    if (!exerciseId || !userId) return;
     setLoading(true);
     const { data, error } = await supabase
       .from("workout_sets")
       .select("*, workout_sessions(date)")
       .eq("exercise_id", exerciseId)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false })
       .limit(100);
 
     if (!error && data) {
-      // Group by session date into { id, date, sets: [{weight, reps}] }
       const grouped = {};
       data.forEach(s => {
         const date = s.workout_sessions?.date || s.created_at?.split("T")[0];
@@ -63,11 +64,12 @@ export function useExerciseHistory(exerciseId) {
       );
     }
     setLoading(false);
-  }, [exerciseId]);
+  }, [exerciseId, userId]);
 
   useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
   const logSets = useCallback(async (sets, targetWeight, targetReps) => {
+    if (!userId) return { error: "Not authenticated" };
     const validSets = sets
       .filter(s => s.weight && s.reps)
       .map(s => ({ weight: parseFloat(s.weight), reps: parseInt(s.reps) }));
@@ -75,12 +77,12 @@ export function useExerciseHistory(exerciseId) {
 
     const today = new Date().toISOString().split("T")[0];
 
-    // Get or create today's session
     let sessionId;
     const { data: existing } = await supabase
       .from("workout_sessions")
       .select("id")
       .eq("date", today)
+      .eq("user_id", userId)
       .single();
 
     if (existing) {
@@ -88,7 +90,7 @@ export function useExerciseHistory(exerciseId) {
     } else {
       const { data: newSession, error } = await supabase
         .from("workout_sessions")
-        .insert({ date: today })
+        .insert({ date: today, user_id: userId })
         .select()
         .single();
       if (error) return { error };
@@ -98,6 +100,7 @@ export function useExerciseHistory(exerciseId) {
     const setsToInsert = validSets.map((s, i) => ({
       exercise_id: exerciseId,
       session_id: sessionId,
+      user_id: userId,
       set_number: i + 1,
       weight_kg: s.weight,
       reps: s.reps,
@@ -108,47 +111,51 @@ export function useExerciseHistory(exerciseId) {
     const { error } = await supabase.from("workout_sets").insert(setsToInsert);
     if (!error) fetchHistory();
     return { error };
-  }, [exerciseId, fetchHistory]);
+  }, [exerciseId, userId, fetchHistory]);
 
   return { history, loading, logSets, refetch: fetchHistory };
 }
 
 // ── Week Sets (done indicators) ──────────────────────────────
 export function useWeekSets() {
+  const { userId } = useAuth();
   const [doneIds, setDoneIds] = useState(new Set());
 
   useEffect(() => {
+    if (!userId) return;
     (async () => {
       const startOfWeek = getStartOfWeek().toISOString().split("T")[0];
       const { data } = await supabase
         .from("workout_sets")
         .select("exercise_id")
+        .eq("user_id", userId)
         .gte("created_at", startOfWeek);
       if (data) {
         setDoneIds(new Set(data.map(s => s.exercise_id)));
       }
     })();
-  }, []);
+  }, [userId]);
 
   return doneIds;
 }
 
 // ── Progress Data ────────────────────────────────────────────
 export function useProgressData() {
+  const { userId } = useAuth();
   const [workoutLogs, setWorkoutLogs] = useState([]);
   const [cardioLogs, setCardioLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!userId) return;
     (async () => {
       setLoading(true);
-      // Fetch workout sets with exercise and session info
       const { data: sets } = await supabase
         .from("workout_sets")
         .select("*, exercises(name, category), workout_sessions(date)")
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
-      // Group into per-exercise-per-date logs
       if (sets) {
         const grouped = {};
         sets.forEach(s => {
@@ -169,92 +176,106 @@ export function useProgressData() {
         setWorkoutLogs(Object.values(grouped));
       }
 
-      // Fetch cardio
       const { data: cardio } = await supabase
         .from("cardio_sessions")
         .select("*")
+        .eq("user_id", userId)
         .order("date", { ascending: false })
         .limit(50);
       setCardioLogs(cardio || []);
 
       setLoading(false);
     })();
-  }, []);
+  }, [userId]);
 
   return { workoutLogs, cardioLogs, loading };
 }
 
 // ── Cardio ───────────────────────────────────────────────────
 export function useCardio() {
+  const { userId } = useAuth();
   const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
+    if (!userId) return;
     (async () => {
       const { data } = await supabase
         .from("cardio_sessions")
         .select("*")
+        .eq("user_id", userId)
         .order("date", { ascending: false })
         .limit(20);
       setSessions(data || []);
     })();
-  }, []);
+  }, [userId]);
 
   const logCardio = useCallback(async ({ duration_minutes, calories }) => {
+    if (!userId) return { error: "Not authenticated" };
     const today = new Date().toISOString().split("T")[0];
     const { data, error } = await supabase
       .from("cardio_sessions")
-      .insert({ date: today, duration_minutes, calories })
+      .insert({ date: today, duration_minutes, calories, user_id: userId })
       .select()
       .single();
     if (!error) setSessions(prev => [data, ...prev]);
     return { error };
-  }, []);
+  }, [userId]);
 
   return { sessions, logCardio };
 }
 
 // ── Body Weight ──────────────────────────────────────────────
 export function useBodyWeight() {
+  const { userId } = useAuth();
   const [logs, setLogs] = useState([]);
 
   useEffect(() => {
+    if (!userId) return;
     (async () => {
       const { data } = await supabase
         .from("body_weight_logs")
         .select("*")
+        .eq("user_id", userId)
         .order("date", { ascending: true })
         .limit(100);
       setLogs(data || []);
     })();
-  }, []);
+  }, [userId]);
 
-  const logWeight = useCallback(async (weight_kg) => {
+  const logWeight = useCallback(async (weight_kg, body_fat_percent) => {
+    if (!userId) return;
     const today = new Date().toISOString().split("T")[0];
 
-    // Upsert: update if today already exists
     const { data: existing } = await supabase
       .from("body_weight_logs")
       .select("id")
       .eq("date", today)
+      .eq("user_id", userId)
       .single();
+
+    const payload = { weight_kg };
+    if (body_fat_percent !== undefined && body_fat_percent !== null && body_fat_percent !== "") {
+      payload.body_fat_percent = parseFloat(body_fat_percent);
+    }
 
     if (existing) {
       await supabase
         .from("body_weight_logs")
-        .update({ weight_kg })
+        .update(payload)
         .eq("id", existing.id);
     } else {
       await supabase
         .from("body_weight_logs")
-        .insert({ date: today, weight_kg });
+        .insert({ date: today, user_id: userId, ...payload });
     }
 
     const { data } = await supabase
       .from("body_weight_logs")
       .select("*")
+      .eq("user_id", userId)
       .order("date", { ascending: true });
     setLogs(data || []);
-  }, []);
+  }, [userId]);
 
   return { logs, logWeight };
 }
