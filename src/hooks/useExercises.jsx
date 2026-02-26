@@ -4,18 +4,20 @@ import { SEED_EXERCISES } from "../lib/seedData";
 import { getStartOfWeek } from "../lib/utils";
 import { useAuth } from "./useAuth";
 
-// ── Exercises (shared, no user_id) ──────────────────────────
+// ── Exercises (per-user) ─────────────────────────────────────
 export function useExercises() {
+  const { userId } = useAuth();
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchExercises(); }, []);
+  useEffect(() => { if (userId) fetchExercises(); }, [userId]);
 
   async function fetchExercises() {
     setLoading(true);
     const { data, error } = await supabase
       .from("exercises")
       .select("*")
+      .eq("user_id", userId)
       .order("category")
       .order("name");
     if (!error) setExercises(data || []);
@@ -25,7 +27,7 @@ export function useExercises() {
   async function addExercise(exercise) {
     const { data, error } = await supabase
       .from("exercises")
-      .insert(exercise)
+      .insert({ ...exercise, user_id: userId })
       .select()
       .single();
     if (!error) setExercises(prev => [...prev, data]);
