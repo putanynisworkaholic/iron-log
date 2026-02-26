@@ -1,145 +1,112 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../lib/supabase";
+import { useState, useEffect, useCallback } from "react";
+import {
+  getExercises, addExercise as storeAddExercise,
+  getExerciseLogs, logWorkout, getWorkoutLogs,
+  getWeekExerciseIds, getCardioLogs, logCardio as storeLogCardio,
+  getBodyWeightLogs, logBodyWeight as storeLogBodyWeight,
+  seedExercisesIfEmpty,
+} from "../lib/store";
+import { SEED_EXERCISES } from "../lib/seedData";
 
 export function useExercises() {
   const [exercises, setExercises] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchExercises();
+    seedExercisesIfEmpty(SEED_EXERCISES);
+    setExercises(getExercises());
+    setLoading(false);
   }, []);
 
-  async function fetchExercises() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("exercises")
-      .select("*")
-      .order("category")
-      .order("name");
-    if (!error) setExercises(data || []);
-    setLoading(false);
-  }
+  const addExercise = useCallback((exercise) => {
+    const ex = storeAddExercise(exercise);
+    setExercises(getExercises());
+    return { data: ex, error: null };
+  }, []);
 
-  async function addExercise(exercise) {
-    const { data, error } = await supabase
-      .from("exercises")
-      .insert(exercise)
-      .select()
-      .single();
-    if (!error) setExercises(prev => [...prev, data]);
-    return { data, error };
-  }
-
-  return { exercises, loading, refetch: fetchExercises, addExercise };
+  return { exercises, loading, addExercise, refetch: () => setExercises(getExercises()) };
 }
 
 export function useExerciseHistory(exerciseId) {
   const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchHistory = useCallback(() => {
     if (!exerciseId) return;
-    fetchHistory();
+    setHistory(getExerciseLogs(exerciseId));
   }, [exerciseId]);
 
-  async function fetchHistory() {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from("workout_sets")
-      .select("*, workout_sessions(date)")
-      .eq("exercise_id", exerciseId)
-      .order("created_at", { ascending: false })
-      .limit(60);
-    if (!error) setHistory(data || []);
-    setLoading(false);
-  }
+  useEffect(() => { fetchHistory(); }, [fetchHistory]);
 
-  async function logSets(sets, targetWeight, targetReps) {
-    const today = new Date().toISOString().split("T")[0];
-    let sessionId;
-
-    const { data: existing } = await supabase
-      .from("workout_sessions")
-      .select("id")
-      .eq("date", today)
-      .single();
-
-    if (existing) {
-      sessionId = existing.id;
-    } else {
-      const { data: newSession, error } = await supabase
-        .from("workout_sessions")
-        .insert({ date: today })
-        .select()
-        .single();
-      if (error) return { error };
-      sessionId = newSession.id;
-    }
-
-    const setsToInsert = sets.map((s, i) => ({
+  const logSets = useCallback((sets, targetWeight, targetReps) => {
+    const validSets = sets
+      .filter(s => s.weight && s.reps)
+      .map(s => ({ weight: parseFloat(s.weight), reps: parseInt(s.reps) }));
+    if (!validSets.length) return { error: "No valid sets" };
+    logWorkout({
       exercise_id: exerciseId,
-      session_id: sessionId,
-      set_number: i + 1,
-      weight_kg: parseFloat(s.weight) || 0,
-      reps: parseInt(s.reps) || 0,
-      target_weight_kg: targetWeight ? parseFloat(targetWeight) : null,
+      sets: validSets,
+      target_weight: targetWeight ? parseFloat(targetWeight) : null,
       target_reps: targetReps ? parseInt(targetReps) : null,
-    }));
+    });
+    fetchHistory();
+    return { error: null };
+  }, [exerciseId, fetchHistory]);
 
-    const { error } = await supabase.from("workout_sets").insert(setsToInsert);
-    if (!error) fetchHistory();
-    return { error };
-  }
+  return { history, logSets, refetch: fetchHistory };
+}
 
-  return { history, loading, logSets, refetch: fetchHistory };
+export function useWeekSets() {
+  const [doneIds, setDoneIds] = useState(new Set());
+
+  useEffect(() => {
+    const now = new Date();
+    const day = now.getDay();
+    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+    const start = new Date(now);
+    start.setDate(diff);
+    start.setHours(0, 0, 0, 0);
+    const since = start.toISOString().split("T")[0];
+    setDoneIds(new Set(getWeekExerciseIds(since)));
+  }, []);
+
+  return doneIds;
 }
 
 export function useProgressData() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [workoutLogs, setWorkoutLogs] = useState([]);
+  const [cardioLogs, setCardioLogs] = useState([]);
 
   useEffect(() => {
-    fetchProgress();
+    setWorkoutLogs(getWorkoutLogs());
+    setCardioLogs(getCardioLogs());
   }, []);
 
-  async function fetchProgress() {
-    setLoading(true);
-    const { data: sets, error } = await supabase
-      .from("workout_sets")
-      .select("*, exercises(name, category), workout_sessions(date)")
-      .order("created_at", { ascending: false });
-    if (!error) setData(sets || []);
-    setLoading(false);
-  }
-
-  return { data, loading, refetch: fetchProgress };
+  return { workoutLogs, cardioLogs };
 }
 
 export function useCardio() {
   const [sessions, setSessions] = useState([]);
 
-  useEffect(() => {
-    fetchCardio();
+  useEffect(() => { setSessions(getCardioLogs()); }, []);
+
+  const log = useCallback(({ duration_minutes, calories }) => {
+    storeLogCardio({ duration_minutes, calories });
+    setSessions(getCardioLogs());
+    return { error: null };
   }, []);
 
-  async function fetchCardio() {
-    const { data } = await supabase
-      .from("cardio_sessions")
-      .select("*")
-      .order("date", { ascending: false })
-      .limit(20);
-    setSessions(data || []);
-  }
+  return { sessions, logCardio: log };
+}
 
-  async function logCardio({ date, duration_minutes, calories }) {
-    const { data, error } = await supabase
-      .from("cardio_sessions")
-      .insert({ date, duration_minutes, calories })
-      .select()
-      .single();
-    if (!error) setSessions(prev => [data, ...prev]);
-    return { error };
-  }
+export function useBodyWeight() {
+  const [logs, setLogs] = useState([]);
 
-  return { sessions, logCardio };
+  useEffect(() => { setLogs(getBodyWeightLogs()); }, []);
+
+  const log = useCallback((weight_kg) => {
+    storeLogBodyWeight(weight_kg);
+    setLogs(getBodyWeightLogs());
+  }, []);
+
+  return { logs, logWeight: log };
 }

@@ -20,8 +20,13 @@ export function formatDate(dateStr) {
   return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short" });
 }
 
-export function calcVolume(weight, reps) {
-  return weight * reps;
+export function formatFullDate(date = new Date()) {
+  return date.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).toUpperCase();
 }
 
 export function calcPercentChange(current, previous) {

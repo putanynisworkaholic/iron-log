@@ -5,31 +5,63 @@
 * {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   background-color: #ffffff;
   color: #000000;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  overscroll-behavior: none;
 }
 
 @layer utilities {
-  .border-pixel {
-    border: 1.5px solid #000;
-  }
   .text-xxs {
     font-size: 0.65rem;
     line-height: 1rem;
   }
 }
 
+/* Collapse animation */
+.collapse-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+.collapse-content.open {
+  grid-template-rows: 1fr;
+}
+.collapse-inner {
+  overflow: hidden;
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* Shake */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-8px); }
+  80% { transform: translateX(8px); }
+}
+.animate-shake { animation: shake 0.4s ease; }
+
 /* Scrollbar minimal */
-::-webkit-scrollbar {
-  width: 2px;
-}
-::-webkit-scrollbar-track {
-  background: #fff;
-}
-::-webkit-scrollbar-thumb {
-  background: #000;
+::-webkit-scrollbar { width: 2px; }
+::-webkit-scrollbar-track { background: #fff; }
+::-webkit-scrollbar-thumb { background: #000; }
+
+/* Safe area for notch phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
 }
