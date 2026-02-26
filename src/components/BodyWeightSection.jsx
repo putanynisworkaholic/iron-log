@@ -10,10 +10,10 @@ export default function BodyWeightSection() {
   const [saved, setSaved] = useState(false);
   const { logs, logWeight } = useBodyWeight();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!input) return;
-    logWeight(parseFloat(input));
+    await logWeight(parseFloat(input));
     setInput("");
     setSaved(true);
     setTimeout(() => setSaved(false), 1200);
@@ -21,7 +21,7 @@ export default function BodyWeightSection() {
 
   const chartData = logs.slice(-14).map(l => ({
     label: formatDate(l.date),
-    value: l.weight_kg,
+    value: parseFloat(l.weight_kg),
   }));
 
   const latest = logs.length > 0 ? logs[logs.length - 1] : null;

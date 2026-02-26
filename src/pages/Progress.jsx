@@ -3,12 +3,10 @@ import { useProgressData, useBodyWeight, useExercises } from "../hooks/useExerci
 import { formatDate, formatFullDate, calcPercentChange } from "../lib/utils";
 import LineChart from "../components/LineChart";
 
-function StrengthCategoryCard({ category, logs, exercises }) {
-  // Total volume for this category
+function StrengthCategoryCard({ category, logs }) {
   const totalVolume = logs.reduce((acc, l) =>
     acc + l.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0);
 
-  // Volume per session date for chart
   const chartData = useMemo(() => {
     const grouped = {};
     logs.forEach(l => {
@@ -39,11 +37,11 @@ function StrengthCategoryCard({ category, logs, exercises }) {
   // Best lift per exercise
   const bestLifts = {};
   logs.forEach(l => {
-    const ex = exercises.find(e => e.id === l.exercise_id);
-    if (!ex) return;
+    const name = l.exercise_name;
+    if (!name) return;
     l.sets.forEach(s => {
-      if (!bestLifts[ex.name] || s.weight > bestLifts[ex.name].weight) {
-        bestLifts[ex.name] = s;
+      if (!bestLifts[name] || s.weight > bestLifts[name].weight) {
+        bestLifts[name] = s;
       }
     });
   });
@@ -96,9 +94,8 @@ function StrengthCategoryCard({ category, logs, exercises }) {
 }
 
 export default function Progress() {
-  const { workoutLogs, cardioLogs } = useProgressData();
+  const { workoutLogs, cardioLogs, loading } = useProgressData();
   const { logs: bodyWeightLogs } = useBodyWeight();
-  const { exercises } = useExercises();
 
   const today = formatFullDate();
 
@@ -106,14 +103,13 @@ export default function Progress() {
   const byCategory = useMemo(() => {
     const map = {};
     workoutLogs.forEach(l => {
-      const ex = exercises.find(e => e.id === l.exercise_id);
-      if (!ex) return;
-      const cat = ex.category;
+      const cat = l.category;
+      if (!cat) return;
       if (!map[cat]) map[cat] = [];
       map[cat].push(l);
     });
     return map;
-  }, [workoutLogs, exercises]);
+  }, [workoutLogs]);
 
   // Overall strength stats
   const totalSessions = useMemo(() => {
@@ -142,35 +138,40 @@ export default function Progress() {
   const bwChartData = useMemo(() => {
     return bodyWeightLogs.slice(-20).map(l => ({
       label: formatDate(l.date),
-      value: l.weight_kg,
+      value: parseFloat(l.weight_kg),
     }));
   }, [bodyWeightLogs]);
 
   const latestWeight = bodyWeightLogs.length > 0
     ? bodyWeightLogs[bodyWeightLogs.length - 1].weight_kg : null;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20 text-[10px] tracking-[0.3em] text-gray-300">
+        LOADING...
+      </div>
+    );
+  }
+
   return (
     <div className="fade-in">
-      {/* Header with today's date */}
       <div className="mb-8">
         <h2 className="text-xl font-bold tracking-wide">PROGRESS</h2>
         <p className="text-[10px] tracking-[0.2em] text-gray-400 mt-1">{today}</p>
       </div>
 
-      {/* ── BODY WEIGHT ──────────────────────────────────── */}
+      {/* Body Weight */}
       {bodyWeightLogs.length > 0 && (
         <div className="mb-8 border border-black p-4">
           <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-2">BODY WEIGHT</p>
           <p className="text-3xl font-bold mb-3">
             {latestWeight}<span className="text-xs font-normal text-gray-400 ml-1">kg</span>
           </p>
-          {bwChartData.length >= 2 && (
-            <LineChart data={bwChartData} height={60} />
-          )}
+          {bwChartData.length >= 2 && <LineChart data={bwChartData} height={60} />}
         </div>
       )}
 
-      {/* ── STRENGTH ─────────────────────────────────────── */}
+      {/* Strength */}
       <div className="mb-2">
         <p className="text-xs font-bold tracking-[0.3em] mb-4 border-b border-black pb-2">STRENGTH</p>
 
@@ -193,18 +194,13 @@ export default function Progress() {
         ) : (
           ["Push", "Pull", "Leg"].map(cat =>
             byCategory[cat] && byCategory[cat].length > 0 ? (
-              <StrengthCategoryCard
-                key={cat}
-                category={cat}
-                logs={byCategory[cat]}
-                exercises={exercises}
-              />
+              <StrengthCategoryCard key={cat} category={cat} logs={byCategory[cat]} />
             ) : null
           )
         )}
       </div>
 
-      {/* ── CARDIO ───────────────────────────────────────── */}
+      {/* Cardio */}
       <div className="mb-6">
         <p className="text-xs font-bold tracking-[0.3em] mb-4 border-b border-black pb-2">CARDIO</p>
 
