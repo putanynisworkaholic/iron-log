@@ -86,9 +86,66 @@ export function TimerIcon({ size = 16, className = "" }) {
   );
 }
 
+export function CalendarIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </svg>
+  );
+}
+
+export function SettingsIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+    </svg>
+  );
+}
+
+export function TrashIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <polyline points="3 6 5 6 21 6" />
+      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+    </svg>
+  );
+}
+
+export function UserIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="7" r="4" />
+      <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
+    </svg>
+  );
+}
+
+export function ChevronDownIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+
 export const CATEGORY_ICONS = {
   Push: DumbbellIcon,
   Pull: BarbellIcon,
   Leg: LegIcon,
+  Legs: LegIcon,
   Cardio: HeartPulseIcon,
+  Upper: BarbellIcon,
+  Lower: LegIcon,
+  "Full Body": DumbbellIcon,
+  Chest: DumbbellIcon,
+  Back: BarbellIcon,
+  Shoulders: DumbbellIcon,
+  Arms: DumbbellIcon,
+  Core: FlameIcon,
 };

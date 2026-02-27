@@ -1,15 +1,17 @@
 -- ============================================================
--- FYT FYN FYN — Supabase Schema (multi-user, passcode auth)
+-- FYT FYN FYN — Supabase Schema (multi-user, flexible splits)
 -- Run this in Supabase SQL Editor
 -- ============================================================
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- ─── EXERCISES ───────────────────────────────────────────────
+-- category is free-text to support PPL, Bro Split, Upper/Lower, etc.
 CREATE TABLE exercises (
   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id     TEXT NOT NULL DEFAULT 'user1',
   name        TEXT NOT NULL,
-  category    TEXT NOT NULL CHECK (category IN ('Push', 'Pull', 'Leg', 'Cardio')),
+  category    TEXT NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -61,49 +63,24 @@ ALTER TABLE cardio_sessions DISABLE ROW LEVEL SECURITY;
 
 -- ─── BODY WEIGHT LOGS ─────────────────────────────────────────
 CREATE TABLE body_weight_logs (
-  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id         TEXT NOT NULL DEFAULT 'user1',
-  date            DATE NOT NULL DEFAULT CURRENT_DATE,
-  weight_kg       NUMERIC(5,1) NOT NULL,
+  id               UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id          TEXT NOT NULL DEFAULT 'user1',
+  date             DATE NOT NULL DEFAULT CURRENT_DATE,
+  weight_kg        NUMERIC(5,1) NOT NULL,
   body_fat_percent NUMERIC(4,1),
-  created_at      TIMESTAMPTZ DEFAULT NOW()
+  created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 ALTER TABLE body_weight_logs DISABLE ROW LEVEL SECURITY;
 
--- ─── SEED EXERCISES ───────────────────────────────────────────
-INSERT INTO exercises (name, category) VALUES
-  -- Push
-  ('Incline Bar Bench', 'Push'),
-  ('Flat Bar Bench', 'Push'),
-  ('Smith Shoulder Press', 'Push'),
-  ('Cable Lateral Raise', 'Push'),
-  ('Dips', 'Push'),
-  ('Pec Fly', 'Push'),
-  ('Rope Pushdown', 'Push'),
-  ('Tricep Extension', 'Push'),
-  -- Pull
-  ('Lat Pulldown', 'Pull'),
-  ('Close Lat Pulldown', 'Pull'),
-  ('Close Lat Pulldown Cable', 'Pull'),
-  ('Wide Row Machine', 'Pull'),
-  ('Close Row Cable', 'Pull'),
-  ('Close Row Machine', 'Pull'),
-  ('T Bar Row', 'Pull'),
-  ('Barbell Row Machine', 'Pull'),
-  ('Rear Deltoid', 'Pull'),
-  -- Leg
-  ('Leg Curl', 'Leg'),
-  ('Leg Extension', 'Leg'),
-  ('Leg Press', 'Leg'),
-  ('Deadlift', 'Leg'),
-  ('Glute', 'Leg'),
-  ('Squat', 'Leg');
-
 -- ─── MIGRATION (run on existing DB) ──────────────────────────
--- ALTER TABLE workout_sessions ADD COLUMN user_id TEXT NOT NULL DEFAULT 'user1';
--- ALTER TABLE workout_sets ADD COLUMN user_id TEXT NOT NULL DEFAULT 'user1';
--- ALTER TABLE cardio_sessions ADD COLUMN user_id TEXT NOT NULL DEFAULT 'user1';
--- ALTER TABLE body_weight_logs ADD COLUMN user_id TEXT NOT NULL DEFAULT 'user1';
--- ALTER TABLE body_weight_logs ADD COLUMN body_fat_percent NUMERIC(4,1);
+-- Run these if upgrading from previous schema:
+
+-- ALTER TABLE exercises DROP CONSTRAINT IF EXISTS exercises_category_check;
+-- ALTER TABLE exercises ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT 'user1';
+-- ALTER TABLE workout_sessions ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT 'user1';
+-- ALTER TABLE workout_sets ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT 'user1';
+-- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT 'user1';
+-- ALTER TABLE body_weight_logs ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT 'user1';
+-- ALTER TABLE body_weight_logs ADD COLUMN IF NOT EXISTS body_fat_percent NUMERIC(4,1);
 -- CREATE INDEX IF NOT EXISTS sets_user_idx ON workout_sets(user_id);

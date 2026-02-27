@@ -1,8 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useExercises, useWeekSets } from "../hooks/useExercises";
-import { useAuth } from "../hooks/useAuth";
+import { useProfile } from "../hooks/useProfile";
 import { getWeekNumber } from "../lib/utils";
-import { CATEGORIES, MOTIVATIONAL_PHRASES } from "../lib/seedData";
+import { MOTIVATIONAL_PHRASES } from "../lib/seedData";
+import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import CategorySection from "../components/CategorySection";
 import CardioSection from "../components/CardioSection";
 import BodyWeightSection from "../components/BodyWeightSection";
@@ -34,18 +35,41 @@ function RotatingHeader({ name }) {
 
 export default function Home() {
   const { exercises, loading } = useExercises();
-  const { name } = useAuth();
+  const { profile } = useProfile();
   const doneIds = useWeekSets();
   const weekNum = getWeekNumber();
   const today = new Date().toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
 
-  const byCategory = useMemo(() => {
-    const map = {};
-    CATEGORIES.filter(c => c !== "Cardio").forEach(c => {
-      map[c] = exercises.filter(ex => ex.category === c);
-    });
-    return map;
-  }, [exercises]);
+  // Determine sections to show based on split
+  const sections = useMemo(() => {
+    if (!profile?.split) return [];
+    const split = profile.split;
+
+    if (split === "Day Split") {
+      const todayFull = new Date().toLocaleDateString("en-US", { weekday: "long" }); // "Monday"
+      const ids = profile?.daySplit?.[todayFull] || [];
+      return [{
+        title: todayFull.toUpperCase(),
+        exercises: exercises.filter(ex => ids.includes(ex.id)),
+        isDaySection: true,
+      }];
+    }
+
+    if (split === "Custom") {
+      const customDays = profile?.customDays || [];
+      return customDays.map(day => ({
+        title: day,
+        exercises: exercises.filter(ex => ex.category === day),
+      }));
+    }
+
+    const splitDef = SPLIT_TYPES.find(s => s.id === split);
+    const splitSections = splitDef?.sections || [];
+    return splitSections.map(section => ({
+      title: section,
+      exercises: exercises.filter(ex => ex.category === section),
+    }));
+  }, [profile, exercises]);
 
   if (loading) {
     return (
@@ -60,26 +84,26 @@ export default function Home() {
       {/* Header */}
       <div className="mb-8">
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-1">{today}</p>
-        <RotatingHeader name={name} />
+        <RotatingHeader name={profile?.name || ""} />
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">WEEK {weekNum} OF 52</p>
       </div>
 
       {/* Body Weight */}
       <BodyWeightSection />
 
-      {/* Categories */}
-      {CATEGORIES.filter(c => c !== "Cardio").map((cat, i) => (
-        <div key={cat} className="stagger-item" style={{ animationDelay: `${i * 50}ms` }}>
+      {/* Split sections */}
+      {sections.map((section, i) => (
+        <div key={section.title} className="stagger-item" style={{ animationDelay: `${i * 50}ms` }}>
           <CategorySection
-            title={cat}
-            exercises={byCategory[cat] || []}
+            title={section.title}
+            exercises={section.exercises}
             doneIds={doneIds}
           />
         </div>
       ))}
 
       {/* Cardio */}
-      <div className="stagger-item" style={{ animationDelay: "150ms" }}>
+      <div className="stagger-item" style={{ animationDelay: `${sections.length * 50}ms` }}>
         <CardioSection />
       </div>
     </div>

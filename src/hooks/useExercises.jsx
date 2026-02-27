@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../lib/supabase";
-import { SEED_EXERCISES } from "../lib/seedData";
 import { getStartOfWeek } from "../lib/utils";
 import { useAuth } from "./useAuth";
 
@@ -34,7 +33,17 @@ export function useExercises() {
     return { data, error };
   }
 
-  return { exercises, loading, refetch: fetchExercises, addExercise };
+  async function deleteExercise(id) {
+    const { error } = await supabase
+      .from("exercises")
+      .delete()
+      .eq("id", id)
+      .eq("user_id", userId);
+    if (!error) setExercises(prev => prev.filter(ex => ex.id !== id));
+    return { error };
+  }
+
+  return { exercises, loading, refetch: fetchExercises, addExercise, deleteExercise };
 }
 
 // ── Exercise History ─────────────────────────────────────────
@@ -132,9 +141,7 @@ export function useWeekSets() {
         .select("exercise_id")
         .eq("user_id", userId)
         .gte("created_at", startOfWeek);
-      if (data) {
-        setDoneIds(new Set(data.map(s => s.exercise_id)));
-      }
+      if (data) setDoneIds(new Set(data.map(s => s.exercise_id)));
     })();
   }, [userId]);
 
@@ -261,14 +268,9 @@ export function useBodyWeight() {
     }
 
     if (existing) {
-      await supabase
-        .from("body_weight_logs")
-        .update(payload)
-        .eq("id", existing.id);
+      await supabase.from("body_weight_logs").update(payload).eq("id", existing.id);
     } else {
-      await supabase
-        .from("body_weight_logs")
-        .insert({ date: today, user_id: userId, ...payload });
+      await supabase.from("body_weight_logs").insert({ date: today, user_id: userId, ...payload });
     }
 
     const { data } = await supabase
