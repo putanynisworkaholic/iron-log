@@ -7,6 +7,7 @@ import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import CategorySection from "../components/CategorySection";
 import CardioSection from "../components/CardioSection";
 import BodyWeightSection from "../components/BodyWeightSection";
+import { DumbbellIcon } from "../components/Icons";
 
 function RotatingHeader({ name }) {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length));
@@ -18,18 +19,23 @@ function RotatingHeader({ name }) {
       setTimeout(() => {
         setIndex(i => (i + 1) % MOTIVATIONAL_PHRASES.length);
         setVisible(true);
-      }, 300);
-    }, 2500);
+      }, 400);
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <h2
-      className="text-xl font-bold tracking-wide leading-tight transition-opacity duration-300"
-      style={{ opacity: visible ? 1 : 0 }}
-    >
-      {MOTIVATIONAL_PHRASES[index]}, {name}
-    </h2>
+    <div className="flex items-start gap-3">
+      <span className="dumbbell-bounce shrink-0 mt-0.5" aria-hidden="true">
+        <DumbbellIcon size={20} className="text-black" />
+      </span>
+      <h2
+        className="text-xl font-bold tracking-wide leading-tight transition-opacity duration-500"
+        style={{ opacity: visible ? 1 : 0 }}
+      >
+        {MOTIVATIONAL_PHRASES[index]}, {name}
+      </h2>
+    </div>
   );
 }
 

@@ -218,12 +218,20 @@ export function useCardio() {
     })();
   }, [userId]);
 
-  const logCardio = useCallback(async ({ duration_minutes, calories }) => {
+  const logCardio = useCallback(async ({ duration_minutes, calories, type, distance_km }) => {
     if (!userId) return { error: "Not authenticated" };
     const today = new Date().toISOString().split("T")[0];
+    const payload = {
+      date: today,
+      duration_minutes,
+      calories: calories || null,
+      user_id: userId,
+      type: type || "Run",
+      distance_km: distance_km ? parseFloat(distance_km) : null,
+    };
     const { data, error } = await supabase
       .from("cardio_sessions")
-      .insert({ date: today, duration_minutes, calories, user_id: userId })
+      .insert(payload)
       .select()
       .single();
     if (!error) setSessions(prev => [data, ...prev]);

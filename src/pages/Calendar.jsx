@@ -10,7 +10,6 @@ function getDaysInMonth(year, month) {
 }
 
 function getMonthOffset(year, month) {
-  // 0=Mon offset for calendar grid
   const firstDay = new Date(year, month, 1).getDay();
   return (firstDay + 6) % 7;
 }
@@ -22,6 +21,7 @@ export default function Calendar() {
 
   const year = current.getFullYear();
   const month = current.getMonth();
+  const todayStr = new Date().toISOString().split("T")[0];
 
   const monthName = current.toLocaleDateString("en-GB", { month: "long", year: "numeric" }).toUpperCase();
 
@@ -35,11 +35,9 @@ export default function Calendar() {
     return map;
   }, [workoutLogs]);
 
-  // Sorted workout dates for previous comparison
   const sortedWorkoutDates = useMemo(() =>
     Object.keys(volumeByDate).sort(), [volumeByDate]);
 
-  // Cardio dates set
   const cardioDates = useMemo(() => new Set(cardioLogs.map(l => l.date)), [cardioLogs]);
 
   function getVolumeIndicator(dateStr) {
@@ -130,32 +128,58 @@ export default function Calendar() {
           const hasCardio = cardioDates.has(dateStr);
           const indicator = hasWorkout ? getVolumeIndicator(dateStr) : null;
           const isSelected = selected === day;
-          const isToday = dateStr === new Date().toISOString().split("T")[0];
+          const isToday = dateStr === todayStr;
+          const isPast = dateStr < todayStr;
+          const noActivity = isPast && !hasWorkout && !hasCardio;
+
+          // Determine cell background (mutually exclusive)
+          let cellBg;
+          if (isSelected) {
+            cellBg = "bg-black";
+          } else if (isPast && !isToday) {
+            cellBg = "bg-gray-50";
+          } else {
+            cellBg = "bg-white";
+          }
 
           return (
             <button
               key={i}
               onClick={() => setSelected(isSelected ? null : day)}
-              className={`bg-white aspect-square flex flex-col items-center justify-center gap-0.5 transition-colors active:bg-gray-50
-                ${isSelected ? "bg-black text-white" : ""}
+              className={`${cellBg} aspect-square flex flex-col items-center justify-center gap-0.5 transition-colors active:bg-gray-50
                 ${isToday && !isSelected ? "border border-black" : ""}
               `}
             >
-              <span className={`text-[10px] leading-none ${isSelected ? "text-white" : isToday ? "font-bold" : "text-gray-600"}`}>
+              <span className={`text-[10px] leading-none ${
+                isSelected ? "text-white" :
+                isToday ? "font-bold text-black" :
+                isPast ? "text-gray-400" : "text-gray-600"
+              }`}>
                 {day}
               </span>
+
+              {/* Past day with no activity: show × */}
+              {noActivity && !isSelected && (
+                <span className="text-[8px] text-gray-300 leading-none">×</span>
+              )}
+
+              {/* Activity icons */}
               {(hasWorkout || hasCardio) && (
                 <div className="flex gap-0.5 items-center">
                   {hasWorkout && (
-                    <BarbellIcon size={8} className={isSelected ? "text-white" : "text-black"} />
+                    <BarbellIcon size={8} className={isSelected ? "text-white" : isPast ? "text-gray-400" : "text-black"} />
                   )}
                   {hasCardio && (
-                    <HeartPulseIcon size={8} className={isSelected ? "text-white" : "text-black"} />
+                    <HeartPulseIcon size={8} className={isSelected ? "text-white" : isPast ? "text-gray-400" : "text-black"} />
                   )}
                 </div>
               )}
+
+              {/* Volume indicator (past workout days) */}
               {indicator && (
-                <span className={`text-[8px] font-bold leading-none ${isSelected ? "text-white" : ""}`}>
+                <span className={`text-[8px] font-bold leading-none ${
+                  isSelected ? "text-white" : isPast ? "text-gray-400" : "text-black"
+                }`}>
                   {indicator}
                 </span>
               )}
@@ -165,7 +189,7 @@ export default function Calendar() {
       </div>
 
       {/* Legend */}
-      <div className="flex gap-4 mt-3 mb-6">
+      <div className="flex flex-wrap gap-3 mt-3 mb-6">
         <div className="flex items-center gap-1">
           <BarbellIcon size={10} className="text-black" />
           <span className="text-[9px] tracking-widest text-gray-400">STRENGTH</span>
@@ -174,8 +198,9 @@ export default function Calendar() {
           <HeartPulseIcon size={10} className="text-black" />
           <span className="text-[9px] tracking-widest text-gray-400">CARDIO</span>
         </div>
-        <span className="text-[9px] tracking-widest text-gray-400">+ VOLUME UP</span>
-        <span className="text-[9px] tracking-widest text-gray-400">− VOLUME DOWN</span>
+        <span className="text-[9px] tracking-widest text-gray-400">+ UP</span>
+        <span className="text-[9px] tracking-widest text-gray-400">− DOWN</span>
+        <span className="text-[9px] tracking-widest text-gray-400">× REST</span>
       </div>
 
       {/* Selected day detail */}
@@ -207,12 +232,15 @@ export default function Calendar() {
           )}
 
           {selectedCardio.map(c => (
-            <div key={c.id} className="flex justify-between items-center py-1">
+            <div key={c.id} className="flex justify-between items-center py-1.5 border-b border-gray-100 last:border-0">
               <div className="flex items-center gap-2">
                 <HeartPulseIcon size={12} />
-                <span className="text-xs tracking-wide">CARDIO</span>
+                <span className="text-xs tracking-wide">{c.type || "CARDIO"}</span>
+                {c.distance_km && (
+                  <span className="text-[10px] text-gray-400">{c.distance_km} km</span>
+                )}
               </div>
-              <span className="text-xs font-bold">{c.duration_minutes} min {c.calories ? `· ${c.calories} kcal` : ""}</span>
+              <span className="text-xs font-bold">{c.duration_minutes} min{c.calories ? ` · ${c.calories} kcal` : ""}</span>
             </div>
           ))}
         </div>

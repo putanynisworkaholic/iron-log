@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useProfile } from "../hooks/useProfile";
+import { useTheme, THEMES } from "../hooks/useTheme";
 import { useExercises } from "../hooks/useExercises";
 import { supabase } from "../lib/supabase";
 import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import { EXERCISE_LIBRARY } from "../lib/exerciseLibrary";
 import Collapse from "../components/Collapse";
-import { TrashIcon, UserIcon } from "../components/Icons";
+import { TrashIcon, UserIcon, PaletteIcon } from "../components/Icons";
 
 function SplitPicker({ current, onSelect }) {
   return (
@@ -34,7 +35,7 @@ function DaySplitConfig() {
   const { profile, assignExerciseToDay, removeExerciseFromDay } = useProfile();
   const { exercises } = useExercises();
   const [openDay, setOpenDay] = useState(null);
-  const [adding, setAdding] = useState(null); // day name
+  const [adding, setAdding] = useState(null);
   const [openGroup, setOpenGroup] = useState(null);
 
   const daySplit = profile?.daySplit || {};
@@ -101,7 +102,6 @@ function DaySplitConfig() {
                                 <button
                                   key={name}
                                   onClick={() => {
-                                    // Find or use name directly
                                     const existing = exercises.find(e => e.name === name);
                                     if (existing) handleAddExercise(day, existing.id);
                                   }}
@@ -141,10 +141,92 @@ function DaySplitConfig() {
   );
 }
 
+function CustomSplitConfig() {
+  const { profile, addCustomDay, removeCustomDay } = useProfile();
+  const [newDay, setNewDay] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const customDays = profile?.customDays || [];
+
+  const handleAdd = () => {
+    if (!newDay.trim()) return;
+    addCustomDay(newDay.trim());
+    setNewDay("");
+  };
+
+  const handleDelete = (day) => {
+    removeCustomDay(day);
+    setConfirmDelete(null);
+  };
+
+  return (
+    <div className="mt-3">
+      {customDays.length === 0 && (
+        <p className="text-[10px] text-gray-300 tracking-widest py-3 text-center">
+          NO CUSTOM DAYS YET
+        </p>
+      )}
+
+      {customDays.map(day => (
+        <div key={day} className="border-b border-gray-100">
+          {confirmDelete === day ? (
+            <div className="flex items-center justify-between py-3 gap-3">
+              <span className="text-xs text-gray-500 tracking-wide truncate">DELETE {day.toUpperCase()}?</span>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={() => handleDelete(day)}
+                  className="text-[10px] tracking-widest bg-black text-white px-3 py-1.5"
+                >
+                  YES
+                </button>
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="text-[10px] tracking-widest border border-gray-300 px-3 py-1.5"
+                >
+                  NO
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between py-3">
+              <span className="text-sm font-bold tracking-wide">{day}</span>
+              <button
+                onClick={() => setConfirmDelete(day)}
+                className="text-gray-300 active:text-black p-1 transition-colors"
+              >
+                <TrashIcon size={13} />
+              </button>
+            </div>
+          )}
+        </div>
+      ))}
+
+      <div className="flex gap-2 mt-4">
+        <input
+          type="text"
+          value={newDay}
+          onChange={e => setNewDay(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && handleAdd()}
+          placeholder="e.g. Push A, Pull B..."
+          className="flex-1 border-b border-black py-2 text-sm focus:outline-none bg-transparent"
+        />
+        <button
+          onClick={handleAdd}
+          disabled={!newDay.trim()}
+          className="px-4 py-2 bg-black text-white text-[10px] tracking-widest disabled:opacity-40"
+        >
+          ADD
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Settings() {
   const navigate = useNavigate();
   const { userId, lock } = useAuth();
   const { profile, updateName, updateSplit, resetProfile } = useProfile();
+  const { theme, setTheme } = useTheme();
 
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile?.name || "");
@@ -260,6 +342,36 @@ export default function Settings() {
           <DaySplitConfig />
         </section>
       )}
+
+      {/* Custom Split Config */}
+      {profile?.split === "Custom" && (
+        <section className="mb-8">
+          <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-3 border-b border-gray-100 pb-2">
+            CUSTOM SPLIT DAYS
+          </p>
+          <CustomSplitConfig />
+        </section>
+      )}
+
+      {/* Theme */}
+      <section className="mb-8">
+        <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-3 border-b border-gray-100 pb-2 flex items-center gap-2">
+          <PaletteIcon size={10} /> THEME
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          {THEMES.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTheme(t.id)}
+              className={`py-3 px-3 border text-left transition-colors
+                ${theme === t.id ? "bg-black text-white border-black" : "border-gray-200 active:border-black"}`}
+            >
+              <p className="text-[10px] font-bold tracking-widest">{t.label}</p>
+              <p className={`text-[9px] mt-0.5 ${theme === t.id ? "text-gray-300" : "text-gray-400"}`}>{t.desc}</p>
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Danger Zone */}
       <section className="mb-8">

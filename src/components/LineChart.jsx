@@ -42,24 +42,24 @@ export default function LineChart({ data, width = 300, height = 80 }) {
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className="w-full" preserveAspectRatio="xMidYMid meet">
       {/* Area fill */}
-      <path d={areaPath} fill="rgba(0,0,0,0.03)" />
+      <path d={areaPath} fill="currentColor" fillOpacity="0.05" />
       {/* Line */}
       <path
         d={pathD}
         fill="none"
-        stroke="#000"
+        stroke="currentColor"
         strokeWidth="1.5"
         strokeLinejoin="round"
         strokeLinecap="round"
       />
       {/* End dots */}
-      <circle cx={points[0].x} cy={points[0].y} r="2.5" fill="#000" />
-      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3" fill="#000" />
+      <circle cx={points[0].x} cy={points[0].y} r="2.5" fill="currentColor" opacity="0.4" />
+      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3" fill="currentColor" />
       {/* Labels */}
-      <text x={points[0].x} y={height - 1} textAnchor="start" fontSize="6.5" fill="#aaa">
+      <text x={points[0].x} y={height - 1} textAnchor="start" fontSize="6.5" fill="currentColor" opacity="0.4">
         {points[0].label}
       </text>
-      <text x={points[points.length - 1].x} y={height - 1} textAnchor="end" fontSize="6.5" fill="#aaa">
+      <text x={points[points.length - 1].x} y={height - 1} textAnchor="end" fontSize="6.5" fill="currentColor" opacity="0.4">
         {points[points.length - 1].label}
       </text>
       {/* Current value */}
@@ -69,7 +69,7 @@ export default function LineChart({ data, width = 300, height = 80 }) {
         textAnchor="end"
         fontSize="7"
         fontWeight="bold"
-        fill="#000"
+        fill="currentColor"
       >
         {points[points.length - 1].value.toLocaleString()}
       </text>

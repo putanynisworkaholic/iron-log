@@ -8,9 +8,74 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+/* ─── THEME VARIABLES ─────────────────────────────────────── */
+
+:root,
+[data-theme="light"] {
+  --t-bg:           #ffffff;
+  --t-bg-alt:       #f9fafb;
+  --t-bg-alt2:      #f3f4f6;
+  --t-text:         #000000;
+  --t-text-inv:     #ffffff;
+  --t-muted:        #9ca3af;
+  --t-muted-soft:   #d1d5db;
+  --t-border:       #000000;
+  --t-border-light: #f3f4f6;
+  --t-border-mid:   #e5e7eb;
+  --t-accent:       #000000;
+  --t-accent-text:  #ffffff;
+}
+
+[data-theme="dark"] {
+  --t-bg:           #0d0d0d;
+  --t-bg-alt:       #1a1a1a;
+  --t-bg-alt2:      #222222;
+  --t-text:         #f0f0f0;
+  --t-text-inv:     #0d0d0d;
+  --t-muted:        #888888;
+  --t-muted-soft:   #555555;
+  --t-border:       #f0f0f0;
+  --t-border-light: #2a2a2a;
+  --t-border-mid:   #383838;
+  --t-accent:       #f0f0f0;
+  --t-accent-text:  #0d0d0d;
+}
+
+[data-theme="cherry"] {
+  --t-bg:           #0d0000;
+  --t-bg-alt:       #1a0000;
+  --t-bg-alt2:      #240000;
+  --t-text:         #f4e0e0;
+  --t-text-inv:     #ffffff;
+  --t-muted:        #c07070;
+  --t-muted-soft:   #7a3030;
+  --t-border:       #e30202;
+  --t-border-light: #1e0000;
+  --t-border-mid:   #3a0000;
+  --t-accent:       #e30202;
+  --t-accent-text:  #ffffff;
+}
+
+[data-theme="blue"] {
+  --t-bg:           #061022;
+  --t-bg-alt:       #0d1f3a;
+  --t-bg-alt2:      #102040;
+  --t-text:         #bde8f5;
+  --t-text-inv:     #061022;
+  --t-muted:        #4988c4;
+  --t-muted-soft:   #1c4d8d;
+  --t-border:       #4988c4;
+  --t-border-light: #0d1f3a;
+  --t-border-mid:   #1c4d8d;
+  --t-accent:       #4988c4;
+  --t-accent-text:  #061022;
+}
+
+/* ─── BASE ────────────────────────────────────────────────── */
+
 body {
-  background-color: #ffffff;
-  color: #000000;
+  background-color: var(--t-bg);
+  color: var(--t-text);
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   overscroll-behavior: none;
 }
@@ -22,7 +87,43 @@ body {
   }
 }
 
-/* Collapse animation */
+/* ─── THEME OVERRIDES ─────────────────────────────────────── */
+/* Apply to all non-light themes. These override Tailwind utilities. */
+
+/* Backgrounds */
+:not([data-theme="light"]) .bg-white              { background-color: var(--t-bg)      !important; }
+:not([data-theme="light"]) .bg-black              { background-color: var(--t-accent)   !important; }
+:not([data-theme="light"]) .bg-gray-50            { background-color: var(--t-bg-alt)   !important; }
+:not([data-theme="light"]) .bg-gray-100           { background-color: var(--t-bg-alt2)  !important; }
+:not([data-theme="light"]) .min-h-screen          { background-color: var(--t-bg); }
+
+/* Text */
+:not([data-theme="light"]) .text-black            { color: var(--t-text)      !important; }
+:not([data-theme="light"]) .text-white            { color: var(--t-text-inv)  !important; }
+:not([data-theme="light"]) .text-gray-300         { color: var(--t-muted-soft) !important; }
+:not([data-theme="light"]) .text-gray-400         { color: var(--t-muted)     !important; }
+:not([data-theme="light"]) .text-gray-500         { color: var(--t-muted)     !important; }
+:not([data-theme="light"]) .text-gray-600         { color: var(--t-muted)     !important; }
+
+/* Borders */
+:not([data-theme="light"]) .border-black          { border-color: var(--t-border)       !important; }
+:not([data-theme="light"]) .border-gray-50        { border-color: var(--t-border-light) !important; }
+:not([data-theme="light"]) .border-gray-100       { border-color: var(--t-border-light) !important; }
+:not([data-theme="light"]) .border-gray-200       { border-color: var(--t-border-mid)   !important; }
+:not([data-theme="light"]) .border-gray-300       { border-color: var(--t-border-mid)   !important; }
+
+/* Active/hover states */
+:not([data-theme="light"]) .active\:bg-black:active       { background-color: var(--t-accent)  !important; }
+:not([data-theme="light"]) .active\:bg-gray-50:active     { background-color: var(--t-bg-alt)  !important; }
+:not([data-theme="light"]) .active\:text-black:active     { color: var(--t-text)               !important; }
+:not([data-theme="light"]) .active\:text-white:active     { color: var(--t-text-inv)           !important; }
+:not([data-theme="light"]) .active\:border-black:active   { border-color: var(--t-border)      !important; }
+:not([data-theme="light"]) .hover\:bg-gray-50:hover       { background-color: var(--t-bg-alt)  !important; }
+
+/* Divide colors */
+:not([data-theme="light"]) .divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--t-border-light) !important; }
+
+/* ─── COLLAPSE ANIMATION ─────────────────────────────────── */
 .collapse-content {
   display: grid;
   grid-template-rows: 0fr;
@@ -35,7 +136,7 @@ body {
   overflow: hidden;
 }
 
-/* Fade in */
+/* ─── FADE IN ─────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -44,7 +145,7 @@ body {
   animation: fadeIn 0.3s ease forwards;
 }
 
-/* Stagger fade-in for list children */
+/* ─── STAGGER ─────────────────────────────────────────────── */
 @keyframes staggerIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -54,12 +155,12 @@ body {
   opacity: 0;
 }
 
-/* Page transition */
+/* ─── PAGE TRANSITION ─────────────────────────────────────── */
 .page-transition {
   animation: fadeIn 0.25s ease forwards;
 }
 
-/* Shake */
+/* ─── SHAKE ───────────────────────────────────────────────── */
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20% { transform: translateX(-8px); }
@@ -69,17 +170,17 @@ body {
 }
 .animate-shake { animation: shake 0.4s ease; }
 
-/* Pulse glow on save success */
+/* ─── PULSE GLOW ──────────────────────────────────────────── */
 @keyframes pulseGlow {
-  0%   { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.3); }
-  50%  { box-shadow: 0 0 0 6px rgba(0, 0, 0, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(0, 0, 0, 0); }
+  0%   { box-shadow: 0 0 0 0 rgba(128, 128, 128, 0.4); }
+  50%  { box-shadow: 0 0 0 8px rgba(128, 128, 128, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(128, 128, 128, 0); }
 }
 .pulse-glow {
   animation: pulseGlow 0.8s ease;
 }
 
-/* Pin dot fill animation (Login) */
+/* ─── PIN FILL ────────────────────────────────────────────── */
 @keyframes pinFill {
   0%   { transform: scale(0.6); opacity: 0.5; }
   50%  { transform: scale(1.2); opacity: 1; }
@@ -89,18 +190,30 @@ body {
   animation: pinFill 0.2s ease forwards;
 }
 
-/* Count-up shimmer */
+/* ─── BOUNCING DUMBBELL ───────────────────────────────────── */
+@keyframes bounceDumbbell {
+  0%, 100% { transform: translateY(0) rotate(-12deg); }
+  30%       { transform: translateY(-7px) rotate(12deg); }
+  60%       { transform: translateY(-3px) rotate(-6deg); }
+}
+.dumbbell-bounce {
+  animation: bounceDumbbell 1.6s ease-in-out infinite;
+  display: inline-block;
+  transform-origin: center;
+}
+
+/* ─── COUNT UP ────────────────────────────────────────────── */
 .count-up {
   display: inline-block;
   animation: fadeIn 0.5s ease forwards;
 }
 
-/* Scrollbar minimal */
+/* ─── SCROLLBAR ───────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 2px; }
-::-webkit-scrollbar-track { background: #fff; }
-::-webkit-scrollbar-thumb { background: #000; }
+::-webkit-scrollbar-track { background: var(--t-bg); }
+::-webkit-scrollbar-thumb { background: var(--t-accent); }
 
-/* Safe area for notch phones */
+/* ─── SAFE AREA ───────────────────────────────────────────── */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .safe-bottom {
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));

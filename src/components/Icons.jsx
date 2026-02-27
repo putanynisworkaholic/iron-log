@@ -134,18 +134,111 @@ export function ChevronDownIcon({ size = 16, className = "" }) {
   );
 }
 
+/* ─── Cardio Type Icons ───────────────────────────────────── */
+
+export function RunningIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* head */}
+      <circle cx="14" cy="3.5" r="1.5" />
+      {/* torso + arms */}
+      <path d="M12 7l-3 5M12 7l2 4" />
+      {/* legs */}
+      <path d="M9 12l-3 6M14 11l2 7" />
+      {/* foot kick-back */}
+      <path d="M6 18l2 2M16 18h3" />
+    </svg>
+  );
+}
+
+export function WalkingIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* head */}
+      <circle cx="12" cy="3.5" r="1.5" />
+      {/* body */}
+      <path d="M12 5.5l-1 6" />
+      {/* arms */}
+      <path d="M8 9l3-1M11 10l4-1" />
+      {/* legs */}
+      <path d="M11 11.5l-2 7M11 11.5l3 5" />
+      {/* feet */}
+      <path d="M7 20l2-1M14 16.5l3 2" />
+    </svg>
+  );
+}
+
+export function EllipticalIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <ellipse cx="12" cy="12" rx="9" ry="5" />
+      <path d="M12 7v10M3 12h18" strokeDasharray="3 2" />
+      <circle cx="12" cy="7" r="1.5" />
+    </svg>
+  );
+}
+
+export function SwimmingIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      {/* head */}
+      <circle cx="4" cy="10" r="1.5" />
+      {/* body + arms */}
+      <path d="M5.5 10l5 2 5-3 4 1" />
+      {/* legs */}
+      <path d="M10.5 12l3 3M15.5 9l3 5" />
+      {/* water waves */}
+      <path d="M2 18c2-2 4 0 6-2s4 0 6-2 4 0 6-2" />
+    </svg>
+  );
+}
+
+export function PaletteIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="8" cy="10" r="1" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="8" r="1" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="10" r="1" fill="currentColor" stroke="none" />
+      <path d="M12 21a3 3 0 0 1 0-6h3a3 3 0 0 0 3-3" />
+    </svg>
+  );
+}
+
+export function PlusIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
+/* ─── Icon Maps ───────────────────────────────────────────── */
+
 export const CATEGORY_ICONS = {
-  Push: DumbbellIcon,
-  Pull: BarbellIcon,
-  Leg: LegIcon,
-  Legs: LegIcon,
-  Cardio: HeartPulseIcon,
-  Upper: BarbellIcon,
-  Lower: LegIcon,
+  Push:        DumbbellIcon,
+  Pull:        BarbellIcon,
+  Leg:         LegIcon,
+  Legs:        LegIcon,
+  Cardio:      HeartPulseIcon,
+  Upper:       BarbellIcon,
+  Lower:       LegIcon,
   "Full Body": DumbbellIcon,
-  Chest: DumbbellIcon,
-  Back: BarbellIcon,
-  Shoulders: DumbbellIcon,
-  Arms: DumbbellIcon,
-  Core: FlameIcon,
+  Chest:       DumbbellIcon,
+  Back:        BarbellIcon,
+  Shoulders:   DumbbellIcon,
+  Arms:        DumbbellIcon,
+  Core:        FlameIcon,
+  Glutes:      LegIcon,
 };
+
+export const CARDIO_TYPE_ICONS = {
+  Run:        RunningIcon,
+  Walk:       WalkingIcon,
+  Elliptical: EllipticalIcon,
+  Swim:       SwimmingIcon,
+  Other:      HeartPulseIcon,
+};
+
+export const CARDIO_TYPES = ["Run", "Walk", "Elliptical", "Swim", "Other"];

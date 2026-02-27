@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ProfileProvider, useProfile } from "./hooks/useProfile";
+import { ThemeProvider } from "./hooks/useTheme";
 import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import ExerciseDetail from "./pages/ExerciseDetail";
@@ -41,6 +42,7 @@ export default function App() {
   return (
     <AuthProvider>
       <ProfileProvider>
+        <ThemeProvider>
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -69,6 +71,7 @@ export default function App() {
             </Route>
           </Routes>
         </Router>
+        </ThemeProvider>
       </ProfileProvider>
     </AuthProvider>
   );

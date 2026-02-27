@@ -3,12 +3,18 @@ import { useCardio } from "../hooks/useExercises";
 import { formatDate } from "../lib/utils";
 import Collapse from "./Collapse";
 import LineChart from "./LineChart";
-import { HeartPulseIcon } from "./Icons";
+import { HeartPulseIcon, CARDIO_TYPE_ICONS, CARDIO_TYPES } from "./Icons";
 
 export default function CardioSection() {
   const [open, setOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
-  const [form, setForm] = useState({ duration_minutes: "", calories: "" });
+  const [form, setForm] = useState({
+    type: "Run",
+    custom_type: "",
+    duration_minutes: "",
+    distance_km: "",
+    calories: "",
+  });
   const [done, setDone] = useState(false);
   const { sessions, logCardio } = useCardio();
 
@@ -21,12 +27,15 @@ export default function CardioSection() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const resolvedType = form.type === "Other" ? (form.custom_type.trim() || "Other") : form.type;
     logCardio({
+      type: resolvedType,
       duration_minutes: parseInt(form.duration_minutes),
-      calories: parseInt(form.calories) || null,
+      distance_km: form.distance_km ? parseFloat(form.distance_km) : null,
+      calories: form.calories ? parseInt(form.calories) : null,
     });
     setDone(true);
-    setForm({ duration_minutes: "", calories: "" });
+    setForm({ type: "Run", custom_type: "", duration_minutes: "", distance_km: "", calories: "" });
     setTimeout(() => { setDone(false); setLogOpen(false); }, 1200);
   };
 
@@ -53,8 +62,43 @@ export default function CardioSection() {
           </button>
 
           <Collapse open={logOpen}>
-            <form onSubmit={handleSubmit} className="mb-4 p-4 border border-gray-200 fade-in">
-              <div className="grid grid-cols-2 gap-4 mb-4">
+            <form onSubmit={handleSubmit} className="mb-4 p-4 border border-gray-200 fade-in space-y-4">
+              {/* Type picker */}
+              <div>
+                <label className="text-[10px] tracking-widest text-gray-400 block mb-2">TYPE</label>
+                <div className="grid grid-cols-5 gap-1">
+                  {CARDIO_TYPES.map(t => {
+                    const Icon = CARDIO_TYPE_ICONS[t] || HeartPulseIcon;
+                    const active = form.type === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setForm(f => ({ ...f, type: t }))}
+                        className={`flex flex-col items-center gap-1 py-2 border text-[9px] tracking-wide transition-colors
+                          ${active ? "bg-black text-white border-black" : "border-gray-200 active:border-black"}`}
+                      >
+                        <Icon size={14} />
+                        {t.toUpperCase()}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Custom type name when "Other" selected */}
+                {form.type === "Other" && (
+                  <input
+                    type="text"
+                    value={form.custom_type}
+                    onChange={e => setForm(f => ({ ...f, custom_type: e.target.value }))}
+                    placeholder="Activity name..."
+                    className="w-full border-b border-black py-2 text-sm focus:outline-none bg-transparent mt-3"
+                  />
+                )}
+              </div>
+
+              {/* Duration + Distance */}
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] tracking-widest text-gray-400 block mb-1">MINUTES</label>
                   <input
@@ -68,23 +112,38 @@ export default function CardioSection() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] tracking-widest text-gray-400 block mb-1">CALORIES</label>
+                  <label className="text-[10px] tracking-widest text-gray-400 block mb-1">KM (OPT.)</label>
                   <input
                     type="number"
-                    inputMode="numeric"
-                    value={form.calories}
-                    onChange={e => setForm(f => ({ ...f, calories: e.target.value }))}
-                    placeholder="300"
+                    inputMode="decimal"
+                    step="0.1"
+                    value={form.distance_km}
+                    onChange={e => setForm(f => ({ ...f, distance_km: e.target.value }))}
+                    placeholder="5.0"
                     className="w-full border-b border-black py-2 text-base focus:outline-none bg-transparent"
                   />
                 </div>
               </div>
+
+              {/* Calories */}
+              <div>
+                <label className="text-[10px] tracking-widest text-gray-400 block mb-1">CALORIES (OPT.)</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={form.calories}
+                  onChange={e => setForm(f => ({ ...f, calories: e.target.value }))}
+                  placeholder="300"
+                  className="w-full border-b border-black py-2 text-base focus:outline-none bg-transparent"
+                />
+              </div>
+
               <button
                 type="submit"
                 disabled={done || !form.duration_minutes}
                 className={`w-full py-3 bg-black text-white text-xs tracking-widest disabled:opacity-50 ${done ? "pulse-glow" : ""}`}
               >
-                {done ? "LOGGED" : "SAVE"}
+                {done ? "LOGGED ✓" : "SAVE"}
               </button>
             </form>
           </Collapse>
@@ -96,13 +155,30 @@ export default function CardioSection() {
             </div>
           )}
 
-          {sessions.slice(0, 5).map(s => (
-            <div key={s.id} className="flex justify-between items-center py-2.5 border-b border-gray-100 text-sm">
-              <span className="text-gray-400 text-[10px] tracking-widest">{formatDate(s.date)}</span>
-              <span className="tracking-wide font-bold">{s.duration_minutes} min</span>
-              {s.calories && <span className="text-gray-400 text-[10px]">{s.calories} kcal</span>}
-            </div>
-          ))}
+          {sessions.slice(0, 6).map(s => {
+            const TypeIcon = CARDIO_TYPE_ICONS[s.type] || HeartPulseIcon;
+            return (
+              <div key={s.id} className="flex items-center justify-between py-2.5 border-b border-gray-100">
+                <div className="flex items-center gap-2">
+                  <TypeIcon size={12} className="text-gray-400 shrink-0" />
+                  <div>
+                    <span className="text-[10px] tracking-widest text-gray-400">
+                      {s.type || "CARDIO"} · {formatDate(s.date)}
+                    </span>
+                    {s.distance_km && (
+                      <span className="text-[10px] text-gray-300 ml-2">{s.distance_km} km</span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right shrink-0">
+                  <span className="text-sm font-bold tracking-wide">{s.duration_minutes} min</span>
+                  {s.calories && (
+                    <span className="text-[10px] text-gray-400 block">{s.calories} kcal</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </Collapse>
     </div>

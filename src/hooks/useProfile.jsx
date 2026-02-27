@@ -61,6 +61,19 @@ export function ProfileProvider({ children }) {
     saveProfile({ daySplit });
   };
 
+  const addCustomDay = (day) => {
+    const trimmed = day.trim();
+    if (!trimmed) return;
+    const customDays = profile?.customDays || [];
+    if (customDays.includes(trimmed)) return;
+    saveProfile({ customDays: [...customDays, trimmed] });
+  };
+
+  const removeCustomDay = (day) => {
+    const customDays = (profile?.customDays || []).filter(d => d !== day);
+    saveProfile({ customDays });
+  };
+
   const resetProfile = () => {
     if (!userId) return;
     localStorage.removeItem(getKey(userId));
@@ -77,6 +90,8 @@ export function ProfileProvider({ children }) {
       assignExerciseToDay,
       removeExerciseFromDay,
       removeExerciseFromAllDays,
+      addCustomDay,
+      removeCustomDay,
       resetProfile,
     }}>
       {children}

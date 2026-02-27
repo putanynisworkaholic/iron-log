@@ -56,6 +56,8 @@ CREATE TABLE cardio_sessions (
   duration_minutes  INTEGER NOT NULL,
   calories          INTEGER,
   notes             TEXT,
+  type              TEXT DEFAULT 'Run',
+  distance_km       NUMERIC(5,2),
   created_at        TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -84,3 +86,8 @@ ALTER TABLE body_weight_logs DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE body_weight_logs ADD COLUMN IF NOT EXISTS user_id TEXT NOT NULL DEFAULT 'user1';
 -- ALTER TABLE body_weight_logs ADD COLUMN IF NOT EXISTS body_fat_percent NUMERIC(4,1);
 -- CREATE INDEX IF NOT EXISTS sets_user_idx ON workout_sets(user_id);
+
+-- ─── CARDIO TYPE & DISTANCE MIGRATION ────────────────────────
+-- Run these if upgrading an existing cardio_sessions table:
+-- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'Run';
+-- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS distance_km NUMERIC(5,2);
