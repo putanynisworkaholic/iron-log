@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useProfile } from "../hooks/useProfile";
 import { SPLIT_TYPES } from "../lib/splitConfig";
-import { FlameIcon } from "../components/Icons";
+import { FlameIcon, SPLIT_ICONS } from "../components/Icons";
 
 export default function Setup() {
   const { name: envName } = useAuth();
@@ -103,19 +103,23 @@ export default function Setup() {
           </div>
 
           <div className="space-y-2">
-            {SPLIT_TYPES.map(s => (
-              <button
-                key={s.id}
-                onClick={() => handleSplitSelect(s.id)}
-                className="w-full flex items-center justify-between py-4 px-4 border border-black active:bg-black active:text-white transition-colors"
-              >
-                <div className="text-left">
-                  <p className="text-xs font-bold tracking-[0.2em]">{s.label}</p>
-                  <p className="text-[10px] text-gray-400 tracking-wide mt-0.5">{s.desc}</p>
-                </div>
-                <span className="text-gray-400 text-sm">→</span>
-              </button>
-            ))}
+            {SPLIT_TYPES.map(s => {
+              const SplitIcon = SPLIT_ICONS[s.id];
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => handleSplitSelect(s.id)}
+                  className="w-full flex items-center gap-4 py-4 px-4 border border-black active:bg-black active:text-white transition-colors r-card"
+                >
+                  {SplitIcon && <SplitIcon size={40} className="shrink-0 opacity-70" />}
+                  <div className="text-left flex-1">
+                    <p className="text-xs font-bold tracking-[0.2em]">{s.label}</p>
+                    <p className="text-[10px] text-gray-400 tracking-wide mt-0.5">{s.desc}</p>
+                  </div>
+                  <span className="text-gray-400 text-sm shrink-0">→</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

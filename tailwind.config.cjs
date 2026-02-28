@@ -4,8 +4,13 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        mono: ["'Courier New'", "Courier", "monospace"],
-        sans: ["'Helvetica Neue'", "Helvetica", "Arial", "sans-serif"],
+        display: ["'Cormorant Garamond'", "Georgia", "serif"],
+        sans: ["'DM Sans'", "'Helvetica Neue'", "Helvetica", "Arial", "sans-serif"],
+        mono: ["'JetBrains Mono'", "'Courier New'", "Courier", "monospace"],
+      },
+      borderRadius: {
+        card: "12px",
+        btn: "8px",
       },
       animation: {
         'pulse-glow': 'pulseGlow 0.8s ease',

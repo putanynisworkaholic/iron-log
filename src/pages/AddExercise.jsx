@@ -6,6 +6,11 @@ import { EXERCISE_LIBRARY } from "../lib/exerciseLibrary";
 import { SPLIT_TYPES, DAY_NAMES, suggestCategory } from "../lib/splitConfig";
 import Collapse from "../components/Collapse";
 
+const toTitleCase = (str) =>
+  str.replace(/\w\S*/g, (word) =>
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  );
+
 function CategoryPicker({ split, profile, muscleGroup, value, onChange }) {
   if (split === "Day Split") {
     return (
@@ -204,7 +209,7 @@ export default function AddExercise() {
             <input
               type="text"
               value={customName}
-              onChange={e => setCustomName(e.target.value)}
+              onChange={e => setCustomName(toTitleCase(e.target.value))}
               placeholder="e.g. Incline Dumbbell Press"
               autoFocus
               className="w-full border-b-2 border-black py-2.5 text-base focus:outline-none bg-transparent"

@@ -8,25 +8,34 @@ import { supabase } from "../lib/supabase";
 import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import { EXERCISE_LIBRARY } from "../lib/exerciseLibrary";
 import Collapse from "../components/Collapse";
-import { TrashIcon, UserIcon, PaletteIcon, EyeIcon, EyeOffIcon } from "../components/Icons";
+import { TrashIcon, UserIcon, PaletteIcon, EyeIcon, EyeOffIcon, SPLIT_ICONS } from "../components/Icons";
 
 function SplitPicker({ current, onSelect }) {
   return (
     <div className="space-y-2 mt-3">
-      {SPLIT_TYPES.map(s => (
-        <button
-          key={s.id}
-          onClick={() => onSelect(s.id)}
-          className={`w-full flex items-center justify-between py-3 px-3 border transition-colors
-            ${s.id === current ? "border-black bg-black text-white" : "border-gray-200 active:border-black"}`}
-        >
-          <div className="text-left">
-            <p className="text-xs font-bold tracking-[0.2em]">{s.label}</p>
-            <p className={`text-[10px] tracking-wide mt-0.5 ${s.id === current ? "text-gray-300" : "text-gray-400"}`}>{s.desc}</p>
-          </div>
-          {s.id === current && <span className="text-xs">✓</span>}
-        </button>
-      ))}
+      {SPLIT_TYPES.map(s => {
+        const SplitIcon = SPLIT_ICONS[s.id];
+        const isActive = s.id === current;
+        return (
+          <button
+            key={s.id}
+            onClick={() => onSelect(s.id)}
+            className={`w-full flex items-center gap-3 py-3 px-3 border transition-colors r-card
+              ${isActive ? "border-black bg-black text-white" : "border-gray-200 active:border-black"}`}
+          >
+            {SplitIcon && (
+              <span className={isActive ? "icon-bounce" : ""}>
+                <SplitIcon size={32} className={`shrink-0 ${isActive ? "opacity-100" : "opacity-50"}`} />
+              </span>
+            )}
+            <div className="text-left flex-1">
+              <p className="text-xs font-bold tracking-[0.2em]">{s.label}</p>
+              <p className={`text-[10px] tracking-wide mt-0.5 ${isActive ? "text-gray-300" : "text-gray-400"}`}>{s.desc}</p>
+            </div>
+            {isActive && <span className="text-xs shrink-0">✓</span>}
+          </button>
+        );
+      })}
     </div>
   );
 }

@@ -80,7 +80,7 @@
 body {
   background-color: var(--t-bg);
   color: var(--t-text);
-  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   overscroll-behavior: none;
 }
 
@@ -89,10 +89,15 @@ body {
     font-size: 0.65rem;
     line-height: 1rem;
   }
+  .font-display {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+  }
+  .font-stat {
+    font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  }
 }
 
 /* ─── THEME OVERRIDES ─────────────────────────────────────── */
-/* Apply to all non-light themes. These override Tailwind utilities. */
 
 /* Backgrounds */
 :not([data-theme="light"]) .bg-white              { background-color: var(--t-bg)      !important; }
@@ -131,7 +136,8 @@ body {
 .collapse-content {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 0.3s ease;
+  transition: grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.25s ease;
 }
 .collapse-content.open {
   grid-template-rows: 1fr;
@@ -150,12 +156,13 @@ body {
 }
 
 /* ─── STAGGER ─────────────────────────────────────────────── */
-@keyframes staggerIn {
-  from { opacity: 0; transform: translateY(6px); }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 .stagger-item {
-  animation: staggerIn 0.3s ease forwards;
+  animation: cardIn 0.3s ease forwards;
+  animation-delay: calc(var(--i, 0) * 60ms);
   opacity: 0;
 }
 
@@ -194,17 +201,30 @@ body {
   animation: pinFill 0.2s ease forwards;
 }
 
-/* ─── BOUNCING DUMBBELL ───────────────────────────────────── */
-@keyframes bounceDumbbell {
-  0%, 100% { transform: translateY(0) rotate(-12deg); }
-  30%       { transform: translateY(-7px) rotate(12deg); }
-  60%       { transform: translateY(-3px) rotate(-6deg); }
+/* ─── MOTIVATIONAL ICON FLOAT ─────────────────────────────── */
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
 }
-.dumbbell-bounce {
-  animation: bounceDumbbell 1.6s ease-in-out infinite;
+.icon-float {
+  animation: iconFloat 1.2s ease-in-out infinite;
   display: inline-block;
-  transform-origin: center;
 }
+.icon-float.paused {
+  animation-play-state: paused;
+}
+
+/* ─── MOTIVATIONAL MESSAGE TRANSITIONS ────────────────────── */
+@keyframes msgOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg-out { animation: msgOut 0.4s ease forwards; }
+.msg-in  { animation: msgIn  0.4s ease forwards; }
 
 /* ─── COUNT UP ────────────────────────────────────────────── */
 .count-up {
@@ -218,8 +238,12 @@ body {
 ::-webkit-scrollbar-thumb { background: var(--t-accent); }
 
 /* ─── BUTTON PRESS ────────────────────────────────────────── */
+button {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
 button:active {
-  transform: scale(0.97);
+  transform: scale(0.95);
+  opacity: 0.85;
 }
 
 /* ─── MODAL ───────────────────────────────────────────────── */
@@ -249,11 +273,50 @@ button:active {
   animation: selectPulse 0.2s ease;
 }
 
+/* ─── ICON BOUNCE ON SELECT ───────────────────────────────── */
+@keyframes iconBounce {
+  0%   { transform: translateY(0); }
+  40%  { transform: translateY(-4px); }
+  100% { transform: translateY(0); }
+}
+.icon-bounce {
+  animation: iconBounce 0.3s ease forwards;
+}
+
+/* ─── CHECK DRAW ──────────────────────────────────────────── */
+@keyframes checkDraw {
+  from { stroke-dashoffset: 20; opacity: 0; }
+  to   { stroke-dashoffset: 0;  opacity: 1; }
+}
+.check-draw {
+  animation: checkDraw 0.2s ease-out forwards;
+}
+
 /* ─── CHEAT DAY ───────────────────────────────────────────── */
 .calendar-cheat {
   color: var(--t-cheat);
   font-weight: 700;
 }
+
+/* ─── ROAST FADE IN ───────────────────────────────────────── */
+.roast-fade {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+/* ─── PILL BUTTON ─────────────────────────────────────────── */
+.pill-btn {
+  border-radius: 20px;
+  transition: all 0.15s ease;
+}
+.pill-btn.active {
+  background-color: var(--t-accent);
+  color: var(--t-accent-text);
+  border-color: var(--t-accent);
+}
+
+/* ─── CARD RADIUS ─────────────────────────────────────────── */
+.r-card { border-radius: 12px; }
+.r-btn  { border-radius: 8px; }
 
 /* ─── ACCESSIBILITY ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

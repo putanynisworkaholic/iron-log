@@ -1,15 +1,14 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useExercises, useWeekSets } from "../hooks/useExercises";
 import { useProfile } from "../hooks/useProfile";
-import { useCheatDays } from "../hooks/useCheatDays";
 import { getWeekNumber } from "../lib/utils";
 import { MOTIVATIONAL_PHRASES } from "../lib/seedData";
 import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import CategorySection from "../components/CategorySection";
 import CardioSection from "../components/CardioSection";
 import BodyWeightSection from "../components/BodyWeightSection";
-import CheatDayModal from "../components/CheatDayModal";
-import { DumbbellIcon, DevilIcon } from "../components/Icons";
+import CheatDaySection from "../components/CheatDaySection";
+import { DumbbellIcon } from "../components/Icons";
 
 const NAME_FORMATS = [
   (name, msg) => `${name}, ${msg}`,
@@ -21,49 +20,70 @@ const NAME_FORMATS = [
 function RotatingHeader({ name }) {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length));
   const [formatIdx, setFormatIdx] = useState(() => Math.floor(Math.random() * NAME_FORMATS.length));
-  const [visible, setVisible] = useState(true);
+  const [msgClass, setMsgClass] = useState("");
+  const [iconPaused, setIconPaused] = useState(false);
+  const [displayMsg, setDisplayMsg] = useState("");
+  const timerRef = useRef(null);
 
+  // Build initial message
   useEffect(() => {
-    const interval = setInterval(() => {
-      setVisible(false);
-      setTimeout(() => {
-        setIndex(i => (i + 1) % MOTIVATIONAL_PHRASES.length);
-        setFormatIdx(Math.floor(Math.random() * NAME_FORMATS.length));
-        setVisible(true);
-      }, 500);
-    }, 3000);
-    return () => clearInterval(interval);
+    setDisplayMsg(NAME_FORMATS[formatIdx](name, MOTIVATIONAL_PHRASES[index]));
   }, []);
 
-  const message = NAME_FORMATS[formatIdx](name, MOTIVATIONAL_PHRASES[index]);
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      // Phase B: icon freezes, text fades out
+      setIconPaused(true);
+      setMsgClass("msg-out");
+
+      setTimeout(() => {
+        // Phase C: new text fades in, icon restarts
+        const newIdx = (index + 1) % MOTIVATIONAL_PHRASES.length;
+        const newFmt = Math.floor(Math.random() * NAME_FORMATS.length);
+        setIndex(newIdx);
+        setFormatIdx(newFmt);
+        setDisplayMsg(NAME_FORMATS[newFmt](name, MOTIVATIONAL_PHRASES[newIdx]));
+        setMsgClass("msg-in");
+        setIconPaused(false);
+      }, 400);
+
+      setTimeout(() => {
+        setMsgClass("");
+      }, 800);
+    }, 3300); // 2.5s visible + 0.4s out + 0.4s in
+
+    return () => clearInterval(timerRef.current);
+  }, [index, name]);
 
   return (
-    <div className="flex items-center justify-center gap-2">
-      <span className="dumbbell-bounce shrink-0" aria-hidden="true">
+    <div className="flex flex-col items-center justify-center text-center w-full">
+      <span className={`icon-float shrink-0 mb-1 ${iconPaused ? "paused" : ""}`} aria-hidden="true">
         <DumbbellIcon size={16} />
       </span>
       <h2
-        className="font-bold tracking-wide leading-tight transition-opacity duration-500 whitespace-nowrap overflow-hidden text-ellipsis"
-        style={{
-          opacity: visible ? 1 : 0,
-          fontSize: "clamp(13px, 3.2vw, 17px)",
-        }}
+        className={`font-bold tracking-wide leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${msgClass}`}
+        style={{ fontSize: "clamp(13px, 3.2vw, 17px)" }}
       >
-        {message}
+        {displayMsg}
       </h2>
     </div>
   );
 }
 
+function formatHomeDate() {
+  const now = new Date();
+  return now.toLocaleDateString("en-GB", {
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+  });
+}
+
 export default function Home() {
   const { exercises, loading } = useExercises();
   const { profile } = useProfile();
-  const { logCheatDay } = useCheatDays();
   const doneIds = useWeekSets();
   const weekNum = getWeekNumber();
-  const today = new Date().toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
-
-  const [cheatOpen, setCheatOpen] = useState(false);
 
   // Determine sections to show based on split
   const sections = useMemo(() => {
@@ -108,18 +128,9 @@ export default function Home() {
     <div className="fade-in">
       {/* Header */}
       <div className="mb-8 text-center">
-        <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-1">{today}</p>
         <RotatingHeader name={profile?.name || ""} />
-        <div className="flex items-center justify-center gap-3 mt-1">
-          <p className="text-[10px] tracking-[0.3em] text-gray-400">WEEK {weekNum} OF 52</p>
-          <button
-            onClick={() => setCheatOpen(true)}
-            className="flex items-center gap-1 py-0.5 px-2 border border-gray-200 text-[9px] tracking-widest text-gray-400 active:border-black active:text-black transition-colors"
-          >
-            <DevilIcon size={10} />
-            CHEAT
-          </button>
-        </div>
+        <p className="text-[13px] text-gray-400 mt-1">{formatHomeDate()}</p>
+        <p className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">WEEK {weekNum} OF 52</p>
       </div>
 
       {/* Body Weight */}
@@ -127,7 +138,7 @@ export default function Home() {
 
       {/* Split sections */}
       {sections.map((section, i) => (
-        <div key={section.title} className="stagger-item" style={{ animationDelay: `${i * 50}ms` }}>
+        <div key={section.title} className="stagger-item" style={{ "--i": i }}>
           <CategorySection
             title={section.title}
             exercises={section.exercises}
@@ -137,17 +148,14 @@ export default function Home() {
       ))}
 
       {/* Cardio */}
-      <div className="stagger-item" style={{ animationDelay: `${sections.length * 50}ms` }}>
+      <div className="stagger-item" style={{ "--i": sections.length }}>
         <CardioSection />
       </div>
 
-      {/* Cheat Day Modal */}
-      <CheatDayModal
-        open={cheatOpen}
-        onClose={() => setCheatOpen(false)}
-        userName={profile?.name || ""}
-        onConfess={(selections) => logCheatDay(selections)}
-      />
+      {/* Cheat Day — third tracking type, after Cardio */}
+      <div className="stagger-item" style={{ "--i": sections.length + 1 }}>
+        <CheatDaySection />
+      </div>
     </div>
   );
 }
