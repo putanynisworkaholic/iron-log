@@ -1,0 +1,11 @@
+{
+  "name": "FYT FYN FYN",
+  "short_name": "FYT FYN FYN",
+  "description": "Track. Lift. Conquer.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "portrait"
+}
