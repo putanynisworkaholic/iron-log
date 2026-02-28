@@ -166,7 +166,7 @@ export default function CheatDaySection() {
                   key={id}
                   type="button"
                   onClick={() => toggle(id)}
-                  className={`flex flex-col items-center gap-1 py-2 border text-[9px] tracking-wide transition-colors r-btn
+                  className={`flex flex-col items-center gap-1 py-2 border text-[9px] tracking-wide transition-colors
                     ${active ? "text-white" : "border-gray-200 text-gray-600 active:border-black"}`}
                   style={active ? { backgroundColor: "var(--t-cheat)", borderColor: "var(--t-cheat)" } : {}}
                 >
@@ -180,7 +180,7 @@ export default function CheatDaySection() {
           <button
             onClick={handleConfess}
             disabled={!selected.size}
-            className={`w-full py-3 bg-black text-white text-xs tracking-widest disabled:opacity-30 transition-all r-btn
+            className={`w-full py-3 bg-black text-white text-xs tracking-widest disabled:opacity-30 transition-all
               ${confessingMsg ? "pulse-glow" : ""}`}
           >
             {confessingMsg || "CONFESS"}

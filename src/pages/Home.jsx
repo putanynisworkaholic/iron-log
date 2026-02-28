@@ -129,7 +129,7 @@ export default function Home() {
       {/* Header */}
       <div className="mb-8 text-center">
         <RotatingHeader name={profile?.name?.toUpperCase() || ""} />
-        <p className="text-[13px] text-gray-400 mt-1 font-normal tracking-[0.02em]">{formatHomeDate()}</p>
+        <p className="text-[13px] text-gray-400 mt-1 font-normal tracking-[0.02em] font-sans">{formatHomeDate()}</p>
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">WEEK {weekNum} OF 52</p>
       </div>
 
