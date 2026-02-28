@@ -80,7 +80,7 @@
 body {
   background-color: var(--t-bg);
   color: var(--t-text);
-  font-family: 'DM Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   overscroll-behavior: none;
 }
 
@@ -88,12 +88,6 @@ body {
   .text-xxs {
     font-size: 0.65rem;
     line-height: 1rem;
-  }
-  .font-display {
-    font-family: 'Cormorant Garamond', Georgia, serif;
-  }
-  .font-stat {
-    font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
   }
 }
 

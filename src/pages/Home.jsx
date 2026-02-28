@@ -128,7 +128,7 @@ export default function Home() {
     <div className="fade-in">
       {/* Header */}
       <div className="mb-8 text-center">
-        <RotatingHeader name={profile?.name || ""} />
+        <RotatingHeader name={profile?.name?.toUpperCase() || ""} />
         <p className="text-[13px] text-gray-400 mt-1">{formatHomeDate()}</p>
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">WEEK {weekNum} OF 52</p>
       </div>

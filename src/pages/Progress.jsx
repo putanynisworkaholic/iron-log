@@ -1,8 +1,10 @@
 import React, { useMemo } from "react";
-import { useProgressData, useBodyWeight, useExercises } from "../hooks/useExercises";
+import { useProgressData, useBodyWeight } from "../hooks/useExercises";
+import { useCheatDays } from "../hooks/useCheatDays";
+import { useProfile } from "../hooks/useProfile";
 import { formatDate, formatFullDate, calcPercentChange } from "../lib/utils";
 import LineChart from "../components/LineChart";
-import { DumbbellIcon, HeartPulseIcon, ScaleIcon, FlameIcon, TrophyIcon } from "../components/Icons";
+import { DumbbellIcon, HeartPulseIcon, ScaleIcon, FlameIcon, TrophyIcon, DevilIcon } from "../components/Icons";
 
 function CountUp({ value, suffix = "" }) {
   return (
@@ -101,11 +103,46 @@ function StrengthCategoryCard({ category, logs }) {
   );
 }
 
+const CHEAT_LABELS = {
+  skipped_training: "Skip Training",
+  skipped_cardio:   "Skip Cardio",
+  junk_food:        "Junk Food",
+  too_lazy:         "Too Lazy",
+  alcohol:          "Alcohol",
+  smoking:          "Smoking",
+  stayed_up_late:   "Stayed Up Late",
+  zero_water:       "Zero Water",
+  stress_eating:    "Stress Eating",
+  skipped_stretching: "Skip Stretching",
+};
+
+function getCheatRoast(breakdown, name) {
+  const top = Object.entries(breakdown).sort(([, a], [, b]) => b - a)[0];
+  if (!top) return null;
+  const [worst, count] = top;
+  const total = Object.values(breakdown).reduce((a, b) => a + b, 0);
+
+  if (total >= 20) return `${name}, you need an intervention. We're concerned 🚨`;
+  if (total >= 10) return `${name} has been a menace this month 💀`;
+  if (total >= 5)  return `${name}, we've noticed a pattern here 👀`;
+
+  if (worst === "skipped_training") return `Skipped training ${count}x this month. The iron remembers 🏋️`;
+  if (worst === "skipped_cardio")   return `${count}x no cardio. Heart rate? We have questions 📉`;
+  if (worst === "junk_food")        return `Junk food ${count}x — you are what you eat 🍔`;
+  if (worst === "too_lazy")         return `Lazy mode activated ${count}x this month 🛏️`;
+  if (worst === "alcohol")          return `${count} alcohol entries. Your liver is filing paperwork 📋`;
+  if (worst === "smoking")          return `${count}x smoking logged. Your lungs want a word 🚬`;
+  return `${total} total cheats logged. At least you're honest 😏`;
+}
+
 export default function Progress() {
   const { workoutLogs, cardioLogs, loading } = useProgressData();
   const { logs: bodyWeightLogs } = useBodyWeight();
+  const { cheatDays } = useCheatDays();
+  const { profile } = useProfile();
 
   const today = formatFullDate();
+  const userName = profile?.name?.toUpperCase() || "You";
 
   const byCategory = useMemo(() => {
     const map = {};
@@ -161,6 +198,25 @@ export default function Progress() {
   const latestFat = bodyWeightLogs.length > 0
     ? bodyWeightLogs[bodyWeightLogs.length - 1].body_fat_percent : null;
 
+  // Cheat stats — this month
+  const cheatStats = useMemo(() => {
+    const now = new Date();
+    const monthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const thisMonth = cheatDays.filter(c => c.date.startsWith(monthStr));
+    const breakdown = {};
+    thisMonth.forEach(c => {
+      c.selections.forEach(sel => {
+        breakdown[sel] = (breakdown[sel] || 0) + 1;
+      });
+    });
+    return { totalDays: thisMonth.length, breakdown };
+  }, [cheatDays]);
+
+  const cheatRoast = useMemo(
+    () => cheatStats.totalDays > 0 ? getCheatRoast(cheatStats.breakdown, userName) : null,
+    [cheatStats, userName]
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[10px] tracking-[0.3em] text-gray-300">
@@ -210,18 +266,18 @@ export default function Progress() {
       )}
 
       {/* Strength */}
-      <div className="mb-2">
+      <div className="mb-6">
         <div className="flex items-center gap-2 mb-4 border-b border-black pb-2">
           <DumbbellIcon size={12} className="text-black" />
           <p className="text-xs font-bold tracking-[0.3em]">STRENGTH</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="border border-black p-4 stagger-item" style={{ animationDelay: "50ms" }}>
+          <div className="border border-black p-4 stagger-item" style={{ "--i": 1 }}>
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">SESSIONS</p>
             <p className="text-3xl font-bold"><CountUp value={totalSessions} /></p>
           </div>
-          <div className="border border-black p-4 stagger-item" style={{ animationDelay: "100ms" }}>
+          <div className="border border-black p-4 stagger-item" style={{ "--i": 2 }}>
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">TOTAL VOLUME</p>
             <p className="text-3xl font-bold"><CountUp value={(totalVolume / 1000).toFixed(1)} /></p>
             <p className="text-[10px] text-gray-400">TONNES</p>
@@ -253,11 +309,11 @@ export default function Progress() {
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">SESSIONS</p>
             <p className="text-2xl font-bold"><CountUp value={totalCardioSessions} /></p>
           </div>
-          <div className="border border-black p-3 stagger-item" style={{ animationDelay: "50ms" }}>
+          <div className="border border-black p-3 stagger-item" style={{ "--i": 1 }}>
             <p className="text-[10px] tracking-widest text-gray-400 mb-1">TOTAL MIN</p>
             <p className="text-2xl font-bold"><CountUp value={totalMinutes} /></p>
           </div>
-          <div className="border border-black p-3 stagger-item" style={{ animationDelay: "100ms" }}>
+          <div className="border border-black p-3 stagger-item" style={{ "--i": 2 }}>
             <div className="flex items-center gap-1 mb-1">
               <FlameIcon size={8} className="text-gray-400" />
               <p className="text-[10px] tracking-widest text-gray-400">KCAL</p>
@@ -277,6 +333,77 @@ export default function Progress() {
           <div className="text-center py-8 border border-gray-200">
             <p className="text-[10px] tracking-[0.3em] text-gray-300">NO CARDIO DATA YET</p>
           </div>
+        )}
+      </div>
+
+      {/* Cheat Statistics */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-4 border-b border-black pb-2">
+          <DevilIcon size={12} className="calendar-cheat" />
+          <p className="text-xs font-bold tracking-[0.3em]">CHEAT</p>
+        </div>
+
+        {cheatStats.totalDays === 0 ? (
+          <div className="text-center py-8 border border-gray-200">
+            <p className="text-[10px] tracking-[0.3em] text-gray-300">NO CHEATS THIS MONTH</p>
+            <p className="text-[10px] text-gray-300 mt-1">Clean streak 💪</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="border border-black p-4 stagger-item">
+                <p className="text-[10px] tracking-widest text-gray-400 mb-1">CHEAT DAYS</p>
+                <p className="text-3xl font-bold"><CountUp value={cheatStats.totalDays} /></p>
+                <p className="text-[10px] text-gray-400">THIS MONTH</p>
+              </div>
+              <div className="border border-black p-4 stagger-item" style={{ "--i": 1 }}>
+                <p className="text-[10px] tracking-widest text-gray-400 mb-1">MOST COMMON</p>
+                {Object.keys(cheatStats.breakdown).length > 0 && (
+                  <>
+                    <p className="text-sm font-bold leading-tight mt-1">
+                      {CHEAT_LABELS[Object.entries(cheatStats.breakdown).sort(([, a], [, b]) => b - a)[0][0]] || "—"}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-1">
+                      {Object.entries(cheatStats.breakdown).sort(([, a], [, b]) => b - a)[0][1]}× logged
+                    </p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Breakdown */}
+            <div className="border border-gray-200 p-4 mb-4">
+              <p className="text-[10px] tracking-widest text-gray-400 mb-3">BREAKDOWN</p>
+              <div className="space-y-2">
+                {Object.entries(cheatStats.breakdown)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([type, count]) => (
+                    <div key={type} className="flex items-center justify-between">
+                      <span className="text-xs text-gray-600">{CHEAT_LABELS[type] || type}</span>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden" style={{ width: "60px" }}>
+                          <div
+                            className="h-full calendar-cheat-bg rounded-full"
+                            style={{
+                              width: `${Math.min(100, (count / cheatStats.totalDays) * 100)}%`,
+                              backgroundColor: "var(--t-cheat)",
+                            }}
+                          />
+                        </div>
+                        <span className="text-xs font-bold w-6 text-right">{count}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+
+            {/* Roast message */}
+            {cheatRoast && (
+              <div className="p-4 border border-gray-200 bg-gray-50">
+                <p className="text-xs tracking-wide leading-relaxed text-center">{cheatRoast}</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

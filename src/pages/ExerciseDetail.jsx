@@ -10,7 +10,7 @@ import { TrophyIcon, LightbulbIcon } from "../components/Icons";
 function SetRow({ index, set, onChange, onRemove }) {
   return (
     <div className="flex items-center gap-3 py-2.5 border-b border-gray-100">
-      <span className="text-[10px] text-gray-400 w-5 text-center font-stat">{index + 1}</span>
+      <span className="text-[10px] text-gray-400 w-5 text-center">{index + 1}</span>
       <div className="flex-1">
         <input
           type="number"
@@ -200,7 +200,7 @@ export default function ExerciseDetail() {
         {lastBest ? (
           <>
             <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-2">LAST SESSION</p>
-            <p className="text-sm font-bold tracking-wide mb-4 font-stat">
+            <p className="text-sm font-bold tracking-wide mb-4">
               {lastBest.weight}kg × {lastBest.reps} reps × {lastSession.sets.length} sets
             </p>
 
@@ -218,7 +218,7 @@ export default function ExerciseDetail() {
                       ${selectedPill === "A" ? "active" : "border-gray-200"}`}
                   >
                     <span className="text-[10px] tracking-widest block mb-0.5 opacity-60">A</span>
-                    <span className="text-sm font-bold font-stat block">{overloadA.weight}kg × {overloadA.reps}</span>
+                    <span className="text-sm font-bold block">{overloadA.weight}kg × {overloadA.reps}</span>
                     <span className="text-[9px] text-gray-400 block mt-0.5">
                       {overloadA.type === "weight" ? "Increase weight" : "Add 1 rep"}
                     </span>
@@ -231,7 +231,7 @@ export default function ExerciseDetail() {
                       ${selectedPill === "B" ? "active" : "border-gray-200"}`}
                   >
                     <span className="text-[10px] tracking-widest block mb-0.5 opacity-60">B</span>
-                    <span className="text-sm font-bold font-stat block">{overloadB.weight}kg × {overloadB.reps}</span>
+                    <span className="text-sm font-bold block">{overloadB.weight}kg × {overloadB.reps}</span>
                     <span className="text-[9px] text-gray-400 block mt-0.5">Add 1 rep</span>
                   </button>
                 )}
@@ -245,7 +245,7 @@ export default function ExerciseDetail() {
               className="w-full flex items-center justify-between py-3 border-t border-gray-100 active:bg-gray-50 transition-colors"
             >
               <span className="text-xs text-gray-500 tracking-wide">USE LAST SESSION</span>
-              <span className="text-sm font-bold font-stat">{lastBest.weight}kg × {lastBest.reps}</span>
+              <span className="text-sm font-bold">{lastBest.weight}kg × {lastBest.reps}</span>
             </button>
           </>
         ) : (
@@ -333,9 +333,9 @@ export default function ExerciseDetail() {
               <div className="flex flex-wrap gap-2">
                 {log.sets.map((s, j) => (
                   <div key={j} className="border border-gray-200 px-2.5 py-1.5 r-btn">
-                    <span className="text-sm font-bold font-stat">{s.weight}</span>
+                    <span className="text-sm font-bold">{s.weight}</span>
                     <span className="text-[10px] text-gray-400"> kg × </span>
-                    <span className="text-sm font-bold font-stat">{s.reps}</span>
+                    <span className="text-sm font-bold">{s.reps}</span>
                   </div>
                 ))}
               </div>

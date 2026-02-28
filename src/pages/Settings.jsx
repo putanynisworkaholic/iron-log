@@ -308,7 +308,7 @@ export default function Settings() {
             </div>
           ) : (
             <div className="flex items-center justify-between py-2">
-              <span className="text-base font-bold">{profile?.name}</span>
+              <span className="text-base font-bold">{profile?.name?.toUpperCase()}</span>
               <button
                 onClick={() => { setEditingName(true); setNameInput(profile?.name || ""); }}
                 className="text-[10px] tracking-widest text-gray-400 active:text-black"

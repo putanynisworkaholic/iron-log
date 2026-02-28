@@ -19,7 +19,7 @@ export default function Layout() {
           </NavLink>
           {profile?.name && (
             <span className="text-[9px] tracking-widest text-gray-400 border border-gray-200 px-1.5 py-0.5">
-              {profile.name}
+              {profile.name.toUpperCase()}
             </span>
           )}
         </div>

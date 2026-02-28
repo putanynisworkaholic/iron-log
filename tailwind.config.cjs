@@ -4,9 +4,8 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        display: ["'Cormorant Garamond'", "Georgia", "serif"],
-        sans: ["'DM Sans'", "'Helvetica Neue'", "Helvetica", "Arial", "sans-serif"],
-        mono: ["'JetBrains Mono'", "'Courier New'", "Courier", "monospace"],
+        sans: ["'Inter'", "'Helvetica Neue'", "Helvetica", "Arial", "sans-serif"],
+        mono: ["'Inter'", "'Helvetica Neue'", "Helvetica", "Arial", "sans-serif"],
       },
       borderRadius: {
         card: "12px",
