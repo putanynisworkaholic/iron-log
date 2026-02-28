@@ -3,17 +3,17 @@ import React, { createContext, useContext, useState } from "react";
 const AuthContext = createContext({});
 const STORAGE_KEY = "fytfynfyn_unlocked";
 
-const USERS = [
-  {
-    id: "user1",
-    name: import.meta.env.VITE_USER_1_NAME || "User 1",
-    code: import.meta.env.VITE_USER_1_CODE || "1234",
-  },
-  {
-    id: "user2",
-    name: import.meta.env.VITE_USER_2_NAME || "User 2",
-    code: import.meta.env.VITE_USER_2_CODE || "5678",
-  },
+export const USERS = [
+  { id: "user1",  code: import.meta.env.VITE_USER_1_CODE || "1234", name: import.meta.env.VITE_USER_1_NAME || "" },
+  { id: "user2",  code: import.meta.env.VITE_USER_2_CODE || "5678", name: import.meta.env.VITE_USER_2_NAME || "" },
+  { id: "user3",  code: "3456", name: "" },
+  { id: "user4",  code: "7823", name: "" },
+  { id: "user5",  code: "5541", name: "" },
+  { id: "user6",  code: "2967", name: "" },
+  { id: "user7",  code: "8834", name: "" },
+  { id: "user8",  code: "4412", name: "" },
+  { id: "user9",  code: "6619", name: "" },
+  { id: "user10", code: "1357", name: "" },
 ];
 
 function getStoredAuth() {
@@ -21,7 +21,7 @@ function getStoredAuth() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed.unlocked && parsed.userId && parsed.name) return parsed;
+      if (parsed.unlocked && parsed.userId) return parsed;
     }
   } catch {}
   return null;

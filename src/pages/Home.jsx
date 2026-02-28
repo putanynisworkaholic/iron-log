@@ -1,16 +1,26 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useExercises, useWeekSets } from "../hooks/useExercises";
 import { useProfile } from "../hooks/useProfile";
+import { useCheatDays } from "../hooks/useCheatDays";
 import { getWeekNumber } from "../lib/utils";
 import { MOTIVATIONAL_PHRASES } from "../lib/seedData";
 import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import CategorySection from "../components/CategorySection";
 import CardioSection from "../components/CardioSection";
 import BodyWeightSection from "../components/BodyWeightSection";
-import { DumbbellIcon } from "../components/Icons";
+import CheatDayModal from "../components/CheatDayModal";
+import { DumbbellIcon, DevilIcon } from "../components/Icons";
+
+const NAME_FORMATS = [
+  (name, msg) => `${name}, ${msg}`,
+  (name, msg) => `${msg}, ${name}`,
+  (name, msg) => `${msg} ${name}!`,
+  (name, msg) => `${name} — ${msg}`,
+];
 
 function RotatingHeader({ name }) {
   const [index, setIndex] = useState(() => Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length));
+  const [formatIdx, setFormatIdx] = useState(() => Math.floor(Math.random() * NAME_FORMATS.length));
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
@@ -18,22 +28,28 @@ function RotatingHeader({ name }) {
       setVisible(false);
       setTimeout(() => {
         setIndex(i => (i + 1) % MOTIVATIONAL_PHRASES.length);
+        setFormatIdx(Math.floor(Math.random() * NAME_FORMATS.length));
         setVisible(true);
-      }, 400);
-    }, 5000);
+      }, 500);
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
+  const message = NAME_FORMATS[formatIdx](name, MOTIVATIONAL_PHRASES[index]);
+
   return (
-    <div className="flex items-start gap-3">
-      <span className="dumbbell-bounce shrink-0 mt-0.5" aria-hidden="true">
-        <DumbbellIcon size={20} className="text-black" />
+    <div className="flex items-center justify-center gap-2">
+      <span className="dumbbell-bounce shrink-0" aria-hidden="true">
+        <DumbbellIcon size={16} />
       </span>
       <h2
-        className="text-xl font-bold tracking-wide leading-tight transition-opacity duration-500"
-        style={{ opacity: visible ? 1 : 0 }}
+        className="font-bold tracking-wide leading-tight transition-opacity duration-500 whitespace-nowrap overflow-hidden text-ellipsis"
+        style={{
+          opacity: visible ? 1 : 0,
+          fontSize: "clamp(13px, 3.2vw, 17px)",
+        }}
       >
-        {MOTIVATIONAL_PHRASES[index]}, {name}
+        {message}
       </h2>
     </div>
   );
@@ -42,9 +58,12 @@ function RotatingHeader({ name }) {
 export default function Home() {
   const { exercises, loading } = useExercises();
   const { profile } = useProfile();
+  const { logCheatDay } = useCheatDays();
   const doneIds = useWeekSets();
   const weekNum = getWeekNumber();
   const today = new Date().toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+
+  const [cheatOpen, setCheatOpen] = useState(false);
 
   // Determine sections to show based on split
   const sections = useMemo(() => {
@@ -52,7 +71,7 @@ export default function Home() {
     const split = profile.split;
 
     if (split === "Day Split") {
-      const todayFull = new Date().toLocaleDateString("en-US", { weekday: "long" }); // "Monday"
+      const todayFull = new Date().toLocaleDateString("en-US", { weekday: "long" });
       const ids = profile?.daySplit?.[todayFull] || [];
       return [{
         title: todayFull.toUpperCase(),
@@ -88,10 +107,19 @@ export default function Home() {
   return (
     <div className="fade-in">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 text-center">
         <p className="text-[10px] tracking-[0.3em] text-gray-400 mb-1">{today}</p>
         <RotatingHeader name={profile?.name || ""} />
-        <p className="text-[10px] tracking-[0.3em] text-gray-400 mt-1">WEEK {weekNum} OF 52</p>
+        <div className="flex items-center justify-center gap-3 mt-1">
+          <p className="text-[10px] tracking-[0.3em] text-gray-400">WEEK {weekNum} OF 52</p>
+          <button
+            onClick={() => setCheatOpen(true)}
+            className="flex items-center gap-1 py-0.5 px-2 border border-gray-200 text-[9px] tracking-widest text-gray-400 active:border-black active:text-black transition-colors"
+          >
+            <DevilIcon size={10} />
+            CHEAT
+          </button>
+        </div>
       </div>
 
       {/* Body Weight */}
@@ -112,6 +140,14 @@ export default function Home() {
       <div className="stagger-item" style={{ animationDelay: `${sections.length * 50}ms` }}>
         <CardioSection />
       </div>
+
+      {/* Cheat Day Modal */}
+      <CheatDayModal
+        open={cheatOpen}
+        onClose={() => setCheatOpen(false)}
+        userName={profile?.name || ""}
+        onConfess={(selections) => logCheatDay(selections)}
+      />
     </div>
   );
 }

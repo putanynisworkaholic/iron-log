@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { useProgressData } from "../hooks/useExercises";
+import { useCheatDays } from "../hooks/useCheatDays";
 import { formatDate } from "../lib/utils";
-import { BarbellIcon, HeartPulseIcon } from "../components/Icons";
+import { BarbellIcon, HeartPulseIcon, DevilIcon } from "../components/Icons";
 
 const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
@@ -16,6 +17,7 @@ function getMonthOffset(year, month) {
 
 export default function Calendar() {
   const { workoutLogs, cardioLogs, loading } = useProgressData();
+  const { cheatDays } = useCheatDays();
   const [current, setCurrent] = useState(new Date());
   const [selected, setSelected] = useState(null);
 
@@ -39,6 +41,9 @@ export default function Calendar() {
     Object.keys(volumeByDate).sort(), [volumeByDate]);
 
   const cardioDates = useMemo(() => new Set(cardioLogs.map(l => l.date)), [cardioLogs]);
+
+  // Cheat day dates
+  const cheatDateSet = useMemo(() => new Set(cheatDays.map(c => c.date)), [cheatDays]);
 
   function getVolumeIndicator(dateStr) {
     const idx = sortedWorkoutDates.indexOf(dateStr);
@@ -74,6 +79,9 @@ export default function Calendar() {
     : [];
   const selectedCardio = selectedDate
     ? cardioLogs.filter(l => l.date === selectedDate)
+    : [];
+  const selectedCheats = selectedDate
+    ? cheatDays.filter(c => c.date === selectedDate)
     : [];
 
   if (loading) {
@@ -126,13 +134,13 @@ export default function Calendar() {
           const dateStr = toDateStr(day);
           const hasWorkout = !!volumeByDate[dateStr];
           const hasCardio = cardioDates.has(dateStr);
+          const isCheat = cheatDateSet.has(dateStr);
           const indicator = hasWorkout ? getVolumeIndicator(dateStr) : null;
           const isSelected = selected === day;
           const isToday = dateStr === todayStr;
           const isPast = dateStr < todayStr;
-          const noActivity = isPast && !hasWorkout && !hasCardio;
+          const noActivity = isPast && !hasWorkout && !hasCardio && !isCheat;
 
-          // Determine cell background (mutually exclusive)
           let cellBg;
           if (isSelected) {
             cellBg = "bg-black";
@@ -163,8 +171,8 @@ export default function Calendar() {
                 <span className="text-[8px] text-gray-300 leading-none">×</span>
               )}
 
-              {/* Activity icons */}
-              {(hasWorkout || hasCardio) && (
+              {/* Activity icons + cheat marker */}
+              {(hasWorkout || hasCardio || isCheat) && (
                 <div className="flex gap-0.5 items-center">
                   {hasWorkout && (
                     <BarbellIcon size={8} className={isSelected ? "text-white" : isPast ? "text-gray-400" : "text-black"} />
@@ -172,10 +180,15 @@ export default function Calendar() {
                   {hasCardio && (
                     <HeartPulseIcon size={8} className={isSelected ? "text-white" : isPast ? "text-gray-400" : "text-black"} />
                   )}
+                  {isCheat && (
+                    <span className={`text-[8px] font-bold leading-none ${isSelected ? "text-white" : "calendar-cheat"}`}>
+                      C
+                    </span>
+                  )}
                 </div>
               )}
 
-              {/* Volume indicator (past workout days) */}
+              {/* Volume indicator */}
               {indicator && (
                 <span className={`text-[8px] font-bold leading-none ${
                   isSelected ? "text-white" : isPast ? "text-gray-400" : "text-black"
@@ -198,6 +211,10 @@ export default function Calendar() {
           <HeartPulseIcon size={10} className="text-black" />
           <span className="text-[9px] tracking-widest text-gray-400">CARDIO</span>
         </div>
+        <div className="flex items-center gap-1">
+          <span className="calendar-cheat text-[9px] font-bold">C</span>
+          <span className="text-[9px] tracking-widest text-gray-400">CHEAT</span>
+        </div>
         <span className="text-[9px] tracking-widest text-gray-400">+ UP</span>
         <span className="text-[9px] tracking-widest text-gray-400">− DOWN</span>
         <span className="text-[9px] tracking-widest text-gray-400">× REST</span>
@@ -210,7 +227,7 @@ export default function Calendar() {
             {new Date(toDateStr(selected)).toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long" }).toUpperCase()}
           </p>
 
-          {selectedWorkouts.length === 0 && selectedCardio.length === 0 && (
+          {selectedWorkouts.length === 0 && selectedCardio.length === 0 && selectedCheats.length === 0 && (
             <p className="text-[10px] text-gray-300 tracking-widest text-center py-3">REST DAY</p>
           )}
 
@@ -243,6 +260,22 @@ export default function Calendar() {
               <span className="text-xs font-bold">{c.duration_minutes} min{c.calories ? ` · ${c.calories} kcal` : ""}</span>
             </div>
           ))}
+
+          {selectedCheats.length > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2 mb-2">
+                <DevilIcon size={12} className="calendar-cheat" />
+                <span className="text-xs tracking-wide calendar-cheat">CHEAT DAY</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedCheats[0].selections.map(s => (
+                  <span key={s} className="text-[9px] border border-gray-200 px-2 py-0.5 calendar-cheat">
+                    {s.replace(/_/g, " ").toUpperCase()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

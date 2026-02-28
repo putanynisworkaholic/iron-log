@@ -242,3 +242,111 @@ export const CARDIO_TYPE_ICONS = {
 };
 
 export const CARDIO_TYPES = ["Run", "Walk", "Elliptical", "Swim", "Other"];
+
+/* ─── Cheat Day Icons ─────────────────────────────────────── */
+
+export function DevilIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="14" r="6" />
+      <path d="M8 8L6 3M16 8L18 3" />
+      <circle cx="10" cy="13" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="13" r="0.8" fill="currentColor" stroke="none" />
+      <path d="M10 16.5c1 1 3 1 4 0" />
+    </svg>
+  );
+}
+
+export function HaloIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <circle cx="12" cy="15" r="6" />
+      <ellipse cx="12" cy="5" rx="5" ry="2" />
+      <circle cx="10" cy="14" r="0.8" fill="currentColor" stroke="none" />
+      <circle cx="14" cy="14" r="0.8" fill="currentColor" stroke="none" />
+      <path d="M10 17c1 1 3 1 4 0" />
+    </svg>
+  );
+}
+
+export function SkippedTrainingIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <rect x="6" y="9" width="3" height="6" rx="0.5" />
+      <rect x="15" y="9" width="3" height="6" rx="0.5" />
+      <line x1="5" y1="5" x2="19" y2="19" />
+    </svg>
+  );
+}
+
+export function SkippedCardioIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M13 2L4 14h6l-2 8 9-12h-6z" />
+      <line x1="5" y1="5" x2="19" y2="19" />
+    </svg>
+  );
+}
+
+export function BurgerIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M5 10a7 7 0 0 1 14 0" />
+      <path d="M4 12h16" />
+      <path d="M5 14l2-1 2 1 2-1 2 1 2-1 2 1" />
+      <path d="M5 16h14v1c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2v-1z" />
+    </svg>
+  );
+}
+
+export function BedIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M3 18v-6a2 2 0 0 1 2-2h4v8" />
+      <path d="M9 10h10a2 2 0 0 1 2 2v6" />
+      <line x1="3" y1="18" x2="21" y2="18" />
+      <path d="M16 3l2 2-2 2" />
+      <path d="M19 2l2 2-2 2" />
+    </svg>
+  );
+}
+
+export function BeerIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="5" y="8" width="10" height="13" rx="1" />
+      <path d="M15 11h3a2 2 0 0 1 0 4h-3" />
+      <path d="M5 8c1-2 3-3 5-3s4 1 5 3" />
+    </svg>
+  );
+}
+
+export function CigaretteIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <rect x="3" y="14" width="15" height="3" rx="0.5" />
+      <line x1="15" y1="14" x2="15" y2="17" />
+      <path d="M5 14c0-1 1-3 2-5s0-4 0-4" />
+      <path d="M8 14c0-1 1-3 2-5s0-4 0-4" />
+    </svg>
+  );
+}
+
+export function EyeIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function EyeOffIcon({ size = 16, className = "" }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+      <line x1="4" y1="4" x2="20" y2="20" />
+    </svg>
+  );
+}

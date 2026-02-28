@@ -75,6 +75,20 @@ CREATE TABLE body_weight_logs (
 
 ALTER TABLE body_weight_logs DISABLE ROW LEVEL SECURITY;
 
+-- ─── CHEAT DAYS ──────────────────────────────────────────────
+CREATE TABLE cheat_days (
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id     TEXT NOT NULL,
+  date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  selections  TEXT[] NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, date)
+);
+
+CREATE INDEX idx_cheat_days_user_date ON cheat_days(user_id, date);
+
+ALTER TABLE cheat_days DISABLE ROW LEVEL SECURITY;
+
 -- ─── MIGRATION (run on existing DB) ──────────────────────────
 -- Run these if upgrading from previous schema:
 
@@ -91,3 +105,16 @@ ALTER TABLE body_weight_logs DISABLE ROW LEVEL SECURITY;
 -- Run these if upgrading an existing cardio_sessions table:
 -- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'Run';
 -- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS distance_km NUMERIC(5,2);
+
+-- ─── CHEAT DAYS MIGRATION ────────────────────────────────────
+-- Run this if the cheat_days table doesn't exist yet:
+-- CREATE TABLE IF NOT EXISTS cheat_days (
+--   id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   user_id     TEXT NOT NULL,
+--   date        DATE NOT NULL DEFAULT CURRENT_DATE,
+--   selections  TEXT[] NOT NULL,
+--   created_at  TIMESTAMPTZ DEFAULT NOW(),
+--   UNIQUE(user_id, date)
+-- );
+-- CREATE INDEX IF NOT EXISTS idx_cheat_days_user_date ON cheat_days(user_id, date);
+-- ALTER TABLE cheat_days DISABLE ROW LEVEL SECURITY;

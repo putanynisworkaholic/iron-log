@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
+import { useAuth, USERS } from "../hooks/useAuth";
 import { useProfile } from "../hooks/useProfile";
 import { useTheme, THEMES } from "../hooks/useTheme";
 import { useExercises } from "../hooks/useExercises";
@@ -8,7 +8,7 @@ import { supabase } from "../lib/supabase";
 import { SPLIT_TYPES, DAY_NAMES } from "../lib/splitConfig";
 import { EXERCISE_LIBRARY } from "../lib/exerciseLibrary";
 import Collapse from "../components/Collapse";
-import { TrashIcon, UserIcon, PaletteIcon } from "../components/Icons";
+import { TrashIcon, UserIcon, PaletteIcon, EyeIcon, EyeOffIcon } from "../components/Icons";
 
 function SplitPicker({ current, onSelect }) {
   return (
@@ -231,8 +231,11 @@ export default function Settings() {
   const [editingName, setEditingName] = useState(false);
   const [nameInput, setNameInput] = useState(profile?.name || "");
   const [changingSplit, setChangingSplit] = useState(false);
+  const [showPasscode, setShowPasscode] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  const currentUser = USERS.find(u => u.id === userId);
 
   const handleSaveName = () => {
     if (!nameInput.trim()) return;
@@ -251,6 +254,7 @@ export default function Settings() {
     await supabase.from("workout_sessions").delete().eq("user_id", userId);
     await supabase.from("cardio_sessions").delete().eq("user_id", userId);
     await supabase.from("body_weight_logs").delete().eq("user_id", userId);
+    await supabase.from("cheat_days").delete().eq("user_id", userId);
     await supabase.from("exercises").delete().eq("user_id", userId);
     resetProfile();
     lock();
@@ -305,6 +309,23 @@ export default function Settings() {
             </div>
           )}
         </div>
+
+        {currentUser && (
+          <div className="mb-4">
+            <p className="text-[10px] tracking-widest text-gray-400 mb-1">YOUR PASSCODE</p>
+            <div className="flex items-center justify-between py-2">
+              <span className="text-base font-bold tracking-[0.3em]">
+                {showPasscode ? currentUser.code : "••••"}
+              </span>
+              <button
+                onClick={() => setShowPasscode(p => !p)}
+                className="text-gray-400 active:text-black p-1 transition-colors"
+              >
+                {showPasscode ? <EyeOffIcon size={16} /> : <EyeIcon size={16} />}
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Training Split */}
