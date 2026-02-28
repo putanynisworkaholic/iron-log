@@ -110,10 +110,8 @@ const CHEAT_LABELS = {
   too_lazy:         "Too Lazy",
   alcohol:          "Alcohol",
   smoking:          "Smoking",
-  stayed_up_late:   "Stayed Up Late",
-  zero_water:       "Zero Water",
-  stress_eating:    "Stress Eating",
-  skipped_stretching: "Skip Stretching",
+  late_night:       "Late Night",
+  no_water:         "No Water",
 };
 
 function getStrengthPraise(workoutLogs, name) {

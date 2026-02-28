@@ -1,17 +1,15 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
 import { useProfile } from "../hooks/useProfile";
 import { SPLIT_TYPES } from "../lib/splitConfig";
 import { FlameIcon, SPLIT_ICONS } from "../components/Icons";
 
 export default function Setup() {
-  const { name: envName } = useAuth();
   const { saveProfile } = useProfile();
   const navigate = useNavigate();
 
   const [step, setStep] = useState(1);
-  const [name, setName] = useState(envName || "");
+  const [name, setName] = useState("");
   const [split, setSplit] = useState(null);
   const [customDays, setCustomDays] = useState(["Day A", "Day B", "Day C"]);
   const [newDay, setNewDay] = useState("");
@@ -33,7 +31,7 @@ export default function Setup() {
 
   const finalize = (selectedSplit, days) => {
     const profile = {
-      name: name.trim(),
+      name: name.trim().toUpperCase(),
       split: selectedSplit,
       daySplit: {},
       customDays: days || [],
@@ -72,7 +70,7 @@ export default function Setup() {
               type="text"
               value={name}
               onChange={e => setName(e.target.value)}
-              placeholder="K. Putanyn"
+              placeholder="Enter your name..."
               autoFocus
               className="w-full border-b-2 border-black py-3 text-lg focus:outline-none bg-transparent tracking-wide mb-8"
             />

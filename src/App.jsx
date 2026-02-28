@@ -20,11 +20,18 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+const LoadingScreen = () => (
+  <div className="flex items-center justify-center min-h-screen text-[10px] tracking-[0.3em] text-gray-300">
+    LOADING...
+  </div>
+);
+
 // Requires: unlocked + profile complete. Redirects accordingly.
 function ProfileRoute({ children }) {
   const { unlocked } = useAuth();
-  const { hasProfile } = useProfile();
+  const { hasProfile, profileLoading } = useProfile();
   if (!unlocked) return <Navigate to="/login" replace />;
+  if (profileLoading) return <LoadingScreen />;
   if (!hasProfile) return <Navigate to="/setup" replace />;
   return children;
 }
@@ -32,8 +39,9 @@ function ProfileRoute({ children }) {
 // Setup: accessible only when unlocked but profile not complete.
 function SetupRoute({ children }) {
   const { unlocked } = useAuth();
-  const { hasProfile } = useProfile();
+  const { hasProfile, profileLoading } = useProfile();
   if (!unlocked) return <Navigate to="/login" replace />;
+  if (profileLoading) return <LoadingScreen />;
   if (hasProfile) return <Navigate to="/" replace />;
   return children;
 }

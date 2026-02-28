@@ -106,6 +106,31 @@ ALTER TABLE cheat_days DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'Run';
 -- ALTER TABLE cardio_sessions ADD COLUMN IF NOT EXISTS distance_km NUMERIC(5,2);
 
+-- ─── USER PROFILES ───────────────────────────────────────────
+CREATE TABLE user_profiles (
+  user_id     TEXT PRIMARY KEY,
+  name        TEXT NOT NULL DEFAULT '',
+  split       TEXT,
+  custom_days JSONB NOT NULL DEFAULT '[]',
+  day_split   JSONB NOT NULL DEFAULT '{}',
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+
+-- ─── USER PROFILES MIGRATION (run on existing DB) ────────────
+-- CREATE TABLE IF NOT EXISTS user_profiles (
+--   user_id     TEXT PRIMARY KEY,
+--   name        TEXT NOT NULL DEFAULT '',
+--   split       TEXT,
+--   custom_days JSONB NOT NULL DEFAULT '[]',
+--   day_split   JSONB NOT NULL DEFAULT '{}',
+--   created_at  TIMESTAMPTZ DEFAULT NOW(),
+--   updated_at  TIMESTAMPTZ DEFAULT NOW()
+-- );
+-- ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+
 -- ─── CHEAT DAYS MIGRATION ────────────────────────────────────
 -- Run this if the cheat_days table doesn't exist yet:
 -- CREATE TABLE IF NOT EXISTS cheat_days (

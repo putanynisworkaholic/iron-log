@@ -1,42 +1,105 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useAuth } from "./useAuth";
+import { supabase } from "../lib/supabase.jsx";
 
 const ProfileContext = createContext({});
 const getKey = (userId) => `fytfynfyn_profile_${userId}`;
 
-function readProfile(userId) {
+function readLocal(userId) {
   if (!userId) return null;
   try {
-    const stored = localStorage.getItem(getKey(userId));
-    return stored ? JSON.parse(stored) : null;
-  } catch {
-    return null;
-  }
+    const s = localStorage.getItem(getKey(userId));
+    return s ? JSON.parse(s) : null;
+  } catch { return null; }
+}
+
+function writeLocal(userId, data) {
+  if (!userId) return;
+  localStorage.setItem(getKey(userId), JSON.stringify(data));
+}
+
+async function fetchRemote(userId) {
+  try {
+    const { data } = await supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (!data) return null;
+    return {
+      name: data.name || "",
+      split: data.split || null,
+      customDays: data.custom_days || [],
+      daySplit: data.day_split || {},
+    };
+  } catch { return null; }
+}
+
+async function saveRemote(userId, profileData) {
+  try {
+    await supabase.from("user_profiles").upsert({
+      user_id: userId,
+      name: profileData.name || "",
+      split: profileData.split || null,
+      custom_days: profileData.customDays || [],
+      day_split: profileData.daySplit || {},
+      updated_at: new Date().toISOString(),
+    }, { onConflict: "user_id" });
+  } catch {}
 }
 
 export function ProfileProvider({ children }) {
   const { userId } = useAuth();
-  const [profile, setProfile] = useState(() => readProfile(userId));
+  const [profile, setProfile] = useState(null);
+  const [profileLoading, setProfileLoading] = useState(true);
 
-  // Re-sync when userId changes (lock/switch user)
   useEffect(() => {
-    setProfile(readProfile(userId));
+    if (!userId) {
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+
+    // Serve local cache instantly to avoid flicker
+    const local = readLocal(userId);
+    if (local) {
+      setProfile(local);
+      setProfileLoading(false);
+      // Background sync to pick up changes from other devices
+      fetchRemote(userId).then(remote => {
+        if (remote) {
+          writeLocal(userId, remote);
+          setProfile(remote);
+        }
+      });
+      return;
+    }
+
+    // No local cache — fetch from Supabase (first login or cleared storage)
+    setProfileLoading(true);
+    fetchRemote(userId).then(remote => {
+      if (remote) {
+        writeLocal(userId, remote);
+        setProfile(remote);
+      } else {
+        setProfile(null);
+      }
+      setProfileLoading(false);
+    });
   }, [userId]);
 
   const persist = (updated) => {
     if (!userId) return;
-    localStorage.setItem(getKey(userId), JSON.stringify(updated));
+    writeLocal(userId, updated);
     setProfile(updated);
+    saveRemote(userId, updated);
     return updated;
   };
 
   const saveProfile = (updates) => persist({ ...profile, ...updates });
-
   const updateName = (name) => saveProfile({ name });
-
   const updateSplit = (split) => saveProfile({ split, customDays: profile?.customDays });
 
-  // Day Split helpers
   const assignExerciseToDay = (day, exerciseId) => {
     const daySplit = { ...profile?.daySplit };
     const current = daySplit[day] || [];
@@ -78,12 +141,14 @@ export function ProfileProvider({ children }) {
     if (!userId) return;
     localStorage.removeItem(getKey(userId));
     setProfile(null);
+    supabase.from("user_profiles").delete().eq("user_id", userId).then(() => {});
   };
 
   return (
     <ProfileContext.Provider value={{
       profile,
       hasProfile: !!profile,
+      profileLoading,
       saveProfile,
       updateName,
       updateSplit,
