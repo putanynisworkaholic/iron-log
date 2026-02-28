@@ -116,6 +116,32 @@ const CHEAT_LABELS = {
   skipped_stretching: "Skip Stretching",
 };
 
+function getStrengthPraise(workoutLogs, name) {
+  if (workoutLogs.length === 0) return null;
+  const now = new Date();
+  const wa = new Date(now); wa.setDate(wa.getDate() - 7);
+  const waStr = wa.toISOString().split("T")[0];
+  const thisWeekDates = new Set(workoutLogs.filter(l => l.date >= waStr).map(l => l.date));
+  const sessions = thisWeekDates.size;
+  if (sessions >= 5) return `${sessions} sessions this week. ${name} is built different.`;
+  if (sessions >= 3) return `Solid week — ${sessions} sessions logged and counting.`;
+  if (sessions >= 1) return `${sessions === 1 ? "One session" : `${sessions} sessions`} in. Every rep counts.`;
+  return `Numbers are waiting. Show up.`;
+}
+
+function getCardioPraise(cardioLogs, name) {
+  if (cardioLogs.length === 0) return null;
+  const now = new Date();
+  const wa = new Date(now); wa.setDate(wa.getDate() - 7);
+  const waStr = wa.toISOString().split("T")[0];
+  const thisWeek = cardioLogs.filter(l => l.date >= waStr);
+  const minutes = thisWeek.reduce((acc, l) => acc + l.duration_minutes, 0);
+  if (minutes >= 150) return `${minutes} min this week. Cardio goals: crushed.`;
+  if (minutes >= 90) return `${minutes} minutes this week. Heart is happy.`;
+  if (minutes > 0) return `Movement is medicine. ${minutes} min this week — keep going.`;
+  return `Cardio's calling. Your heart will thank you.`;
+}
+
 function getCheatRoast(breakdown, name) {
   const top = Object.entries(breakdown).sort(([, a], [, b]) => b - a)[0];
   if (!top) return null;
@@ -217,6 +243,16 @@ export default function Progress() {
     [cheatStats, userName]
   );
 
+  const strengthPraise = useMemo(
+    () => getStrengthPraise(workoutLogs, userName),
+    [workoutLogs, userName]
+  );
+
+  const cardioPraise = useMemo(
+    () => getCardioPraise(cardioLogs, userName),
+    [cardioLogs, userName]
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-[10px] tracking-[0.3em] text-gray-300">
@@ -267,9 +303,14 @@ export default function Progress() {
 
       {/* Strength */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4 border-b border-black pb-2">
-          <DumbbellIcon size={12} className="text-black" />
-          <p className="text-xs font-bold tracking-[0.3em]">STRENGTH</p>
+        <div className="border-b border-black pb-2 mb-4">
+          <div className="flex items-center gap-2">
+            <DumbbellIcon size={12} className="text-black" />
+            <p className="text-xs font-bold tracking-[0.3em]">STRENGTH</p>
+          </div>
+          {strengthPraise && (
+            <p className="text-[12px] text-gray-400 italic mt-1">{strengthPraise}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-6">
@@ -299,9 +340,14 @@ export default function Progress() {
 
       {/* Cardio */}
       <div className="mb-6">
-        <div className="flex items-center gap-2 mb-4 border-b border-black pb-2">
-          <HeartPulseIcon size={12} className="text-black" />
-          <p className="text-xs font-bold tracking-[0.3em]">CARDIO</p>
+        <div className="border-b border-black pb-2 mb-4">
+          <div className="flex items-center gap-2">
+            <HeartPulseIcon size={12} className="text-black" />
+            <p className="text-xs font-bold tracking-[0.3em]">CARDIO</p>
+          </div>
+          {cardioPraise && (
+            <p className="text-[12px] text-gray-400 italic mt-1">{cardioPraise}</p>
+          )}
         </div>
 
         <div className="grid grid-cols-3 gap-2 mb-6">

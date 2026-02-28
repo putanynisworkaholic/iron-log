@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { useCheatDays } from "../hooks/useCheatDays";
-import { useProfile } from "../hooks/useProfile";
 import Collapse from "./Collapse";
 import {
   DevilIcon,
@@ -10,9 +9,10 @@ import {
   LazyIcon,
   BeerIcon,
   CigaretteIcon,
+  StayedUpLateIcon,
+  ZeroWaterIcon,
 } from "./Icons";
 
-// Per-option roast message pools
 const OPTION_ROASTS = {
   skipped_training: [
     "Skipped training? We saw that 😏",
@@ -66,68 +66,82 @@ const OPTION_ROASTS = {
     "Your VO2 max is crying 📉",
     "Puffing away the gains 🚬",
   ],
+  late_night: [
+    "Sleep is free recovery. You declined 😴",
+    "3am and counting... 🌙",
+    "Melatonin said come home 🌛",
+    "Tomorrow's workout is already suffering 💤",
+    "The gains happen while you sleep. Just saying 🛏️",
+    "Night owl mode: gains bird mode: off 🦉",
+  ],
+  no_water: [
+    "Your muscles are 70% water. Where is it? 💧",
+    "Hydration? Never heard of her 🏜️",
+    "Dry run. Literally 🚰",
+    "The human body is disappointed in you 🫗",
+    "Caffeine doesn't count 🫙",
+    "Dehydrated gains are not gains 🧪",
+  ],
 };
 
 const CHEAT_OPTIONS = [
-  { id: "skipped_training", label: "Skip Weight Training", Icon: SkippedTrainingIcon },
-  { id: "skipped_cardio",   label: "Skip Cardio",          Icon: SkippedCardioIcon },
-  { id: "junk_food",        label: "Eat Junk Food",        Icon: BurgerIcon },
-  { id: "too_lazy",         label: "Too Lazy To Get Up",   Icon: LazyIcon },
-  { id: "alcohol",          label: "Alcohol",              Icon: BeerIcon },
-  { id: "smoking",          label: "Smoking",              Icon: CigaretteIcon },
+  { id: "skipped_training", label: "SKIP TRAIN",  Icon: SkippedTrainingIcon },
+  { id: "skipped_cardio",   label: "SKIP CARDIO", Icon: SkippedCardioIcon },
+  { id: "junk_food",        label: "JUNK FOOD",   Icon: BurgerIcon },
+  { id: "too_lazy",         label: "TOO LAZY",    Icon: LazyIcon },
+  { id: "alcohol",          label: "ALCOHOL",     Icon: BeerIcon },
+  { id: "smoking",          label: "SMOKING",     Icon: CigaretteIcon },
+  { id: "late_night",       label: "LATE NIGHT",  Icon: StayedUpLateIcon },
+  { id: "no_water",         label: "NO WATER",    Icon: ZeroWaterIcon },
 ];
 
-function pickRoast(optionId) {
-  const pool = OPTION_ROASTS[optionId] || ["Questionable choice 💀"];
-  return pool[Math.floor(Math.random() * pool.length)];
+function pickRoastForSelection(selected) {
+  const allRoasts = [];
+  selected.forEach(id => {
+    const pool = OPTION_ROASTS[id] || [];
+    allRoasts.push(...pool);
+  });
+  if (!allRoasts.length) return "Questionable choices today 💀";
+  return allRoasts[Math.floor(Math.random() * allRoasts.length)];
 }
 
 export default function CheatDaySection() {
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState(new Set());
-  const [roastMap, setRoastMap] = useState({});
-  const { profile } = useProfile();
+  const [confessingMsg, setConfessingMsg] = useState(null);
   const { cheatDays, logCheatDay } = useCheatDays();
-  const prevOpen = useRef(open);
 
   // Load today's existing selections
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     const todayCheat = cheatDays.find(c => c.date === today);
     if (todayCheat && todayCheat.selections.length > 0) {
-      const s = new Set(todayCheat.selections);
-      setSelected(s);
-      const rm = {};
-      todayCheat.selections.forEach(id => { rm[id] = pickRoast(id); });
-      setRoastMap(rm);
+      setSelected(new Set(todayCheat.selections));
     }
   }, [cheatDays]);
 
-  // Auto-save when section collapses
-  useEffect(() => {
-    if (prevOpen.current && !open && selected.size > 0) {
-      logCheatDay([...selected]);
-    }
-    prevOpen.current = open;
-  }, [open]);
-
   const toggle = (id) => {
+    if (confessingMsg) return;
     setSelected(prev => {
       const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-        setRoastMap(rm => { const n = { ...rm }; delete n[id]; return n; });
-      } else {
-        next.add(id);
-        setRoastMap(rm => ({ ...rm, [id]: pickRoast(id) }));
-      }
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   };
 
+  const handleConfess = async () => {
+    if (!selected.size || confessingMsg) return;
+    const roast = pickRoastForSelection([...selected]);
+    setConfessingMsg(roast);
+    await logCheatDay([...selected]);
+    setTimeout(() => {
+      setConfessingMsg(null);
+      setSelected(new Set());
+    }, 3000);
+  };
+
   return (
     <div className="mb-4">
-      {/* Section header — same pattern as Cardio */}
       <button
         onClick={() => setOpen(o => !o)}
         className="w-full flex items-center justify-between py-4 border-b border-black active:bg-gray-50 transition-colors"
@@ -136,62 +150,41 @@ export default function CheatDaySection() {
           <DevilIcon size={14} className="calendar-cheat" />
           <span className="text-xs font-bold tracking-[0.3em]">CHEAT</span>
           {selected.size > 0 && (
-            <span className="text-[10px] tracking-widest calendar-cheat">
-              {selected.size}
-            </span>
+            <span className="text-[10px] tracking-widest calendar-cheat">{selected.size}</span>
           )}
         </div>
         <span className="text-xs text-gray-400">{open ? "−" : "+"}</span>
       </button>
 
       <Collapse open={open}>
-        <div className="pt-1 pb-3">
-          {CHEAT_OPTIONS.map(({ id, label, Icon }) => {
-            const isActive = selected.has(id);
-            return (
-              <div key={id}>
+        <div className="pt-3 pb-3">
+          <div className="grid grid-cols-4 gap-1 mb-3">
+            {CHEAT_OPTIONS.map(({ id, label, Icon }) => {
+              const active = selected.has(id);
+              return (
                 <button
+                  key={id}
+                  type="button"
                   onClick={() => toggle(id)}
-                  className={`w-full flex items-center justify-between py-3.5 border-b border-gray-100 active:bg-gray-50 transition-colors
-                    ${isActive ? "border-l-2 border-l-black pl-3" : ""}`}
+                  className={`flex flex-col items-center gap-1 py-2 border text-[9px] tracking-wide transition-colors r-btn
+                    ${active ? "text-white" : "border-gray-200 text-gray-600 active:border-black"}`}
+                  style={active ? { backgroundColor: "var(--t-cheat)", borderColor: "var(--t-cheat)" } : {}}
                 >
-                  <div className="flex items-center gap-3">
-                    <Icon
-                      size={16}
-                      className={isActive ? "calendar-cheat" : "text-gray-400"}
-                    />
-                    <span className={`text-sm tracking-wide ${isActive ? "font-semibold" : ""}`}>
-                      {label}
-                    </span>
-                  </div>
-                  <div
-                    className={`w-5 h-5 border-2 flex items-center justify-center shrink-0 transition-colors
-                      ${isActive ? "bg-black border-black" : "border-gray-300"}`}
-                    style={{ borderRadius: "4px" }}
-                  >
-                    {isActive && (
-                      <svg
-                        width="11" height="11" viewBox="0 0 24 24"
-                        fill="none" stroke="white" strokeWidth="3.5"
-                        strokeLinecap="round" strokeLinejoin="round"
-                        className="check-draw"
-                        style={{ strokeDasharray: 20 }}
-                      >
-                        <polyline points="4 12 10 18 20 6" />
-                      </svg>
-                    )}
-                  </div>
+                  <Icon size={14} />
+                  {label}
                 </button>
+              );
+            })}
+          </div>
 
-                {/* Per-option roast */}
-                {isActive && roastMap[id] && (
-                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 roast-fade">
-                    <p className="text-[11px] text-gray-500 tracking-wide">{roastMap[id]}</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          <button
+            onClick={handleConfess}
+            disabled={!selected.size}
+            className={`w-full py-3 bg-black text-white text-xs tracking-widest disabled:opacity-30 transition-all r-btn
+              ${confessingMsg ? "pulse-glow" : ""}`}
+          >
+            {confessingMsg || "CONFESS"}
+          </button>
         </div>
       </Collapse>
     </div>
