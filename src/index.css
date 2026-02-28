@@ -299,7 +299,7 @@ button:active {
 
 /* ─── PILL BUTTON ─────────────────────────────────────────── */
 .pill-btn {
-  border-radius: 20px;
+  border-radius: 0;
   transition: all 0.15s ease;
 }
 .pill-btn.active {
@@ -308,9 +308,9 @@ button:active {
   border-color: var(--t-accent);
 }
 
-/* ─── CARD RADIUS ─────────────────────────────────────────── */
-.r-card { border-radius: 12px; }
-.r-btn  { border-radius: 8px; }
+/* ─── CARD / BUTTON RADIUS (sharp) ───────────────────────── */
+.r-card { border-radius: 0; }
+.r-btn  { border-radius: 0; }
 
 /* ─── ACCESSIBILITY ───────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

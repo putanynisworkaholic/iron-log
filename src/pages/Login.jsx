@@ -50,7 +50,7 @@ export default function Login() {
         {Array.from({ length: CODE_LENGTH }).map((_, i) => (
           <div
             key={i}
-            className={`w-4 h-4 rounded-full border-2 border-black transition-all duration-200 ${
+            className={`w-4 h-4 border-2 border-black transition-all duration-200 ${
               i < input.length ? "bg-black scale-110 pin-fill" : "bg-white"
             }`}
           />

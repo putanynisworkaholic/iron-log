@@ -26,14 +26,16 @@ export function useCheatDays() {
     // Upsert: update if already confessed today
     const { data: existing } = await supabase
       .from("cheat_days")
-      .select("id")
+      .select("id, selections")
       .eq("user_id", userId)
       .eq("date", today)
-      .single();
+      .maybeSingle();
 
     if (existing) {
+      // Merge new selections with existing (append-only, deduped)
+      const merged = [...new Set([...existing.selections, ...selections])];
       await supabase.from("cheat_days")
-        .update({ selections })
+        .update({ selections: merged })
         .eq("id", existing.id);
     } else {
       await supabase.from("cheat_days")

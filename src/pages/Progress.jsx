@@ -425,9 +425,9 @@ export default function Progress() {
                     <div key={type} className="flex items-center justify-between">
                       <span className="text-xs text-gray-600">{CHEAT_LABELS[type] || type}</span>
                       <div className="flex items-center gap-2">
-                        <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden" style={{ width: "60px" }}>
+                        <div className="h-1.5 bg-gray-200 overflow-hidden" style={{ width: "60px" }}>
                           <div
-                            className="h-full calendar-cheat-bg rounded-full"
+                            className="h-full calendar-cheat-bg"
                             style={{
                               width: `${Math.min(100, (count / cheatStats.totalDays) * 100)}%`,
                               backgroundColor: "var(--t-cheat)",
